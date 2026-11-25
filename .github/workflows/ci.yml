@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Antivirus.sln
+
+      - name: Build (Release)
+        run: dotnet build Antivirus.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test src/Antivirus.Tests --configuration Release --no-build --verbosity normal
+
+  release:
+    runs-on: windows-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Publish self-contained exe
+        run: >
+          dotnet publish src/Antivirus.UI/Antivirus.UI.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:PublishReadyToRun=true
+          --output publish/
+
+      - name: Get version date
+        id: date
+        run: echo "tag=v$(Get-Date -Format 'yyyy.MM.dd')" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.date.outputs.tag }}
+          name: "AVDON ${{ steps.date.outputs.tag }}"
+          body: |
+            ## AVDON — Antivírus Open Source
+
+            ### Novidades
+            - Detecção por SHA256 + MalwareBazaar
+            - Análise de entropia (detecta packers)
+            - Análise estática de PE
+            - Scan recursivo de ZIP/RAR/7z
+            - YARA rules
+            - Authenticode check
+            - Cache inteligente de scan
+            - System tray + notificações
+            - Histórico de scans
+
+            ### Instalação
+            1. Baixe `AntivirusOS.exe`
+            2. Execute (não precisa instalar)
+            3. Na aba Configurações, insira sua API key do Claude (opcional)
+            4. Clique em **Atualizar Assinaturas** para baixar do MalwareBazaar
+
+            > ⚠️ Requer Windows 10/11 x64
+          files: publish/AntivirusOS.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
