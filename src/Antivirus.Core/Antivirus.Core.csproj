@@ -9,7 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Anthropic.SDK" Version="4.0.0" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.0" />
-    <PackageReference Include="SharpCompress" Version="0.37.2" />
   </ItemGroup>
 
 </Project>

@@ -1,11 +1,11 @@
+using System.IO.Compression;
 using AntivirusOS.Core.Models;
-using SharpCompress.Archives;
 
 namespace AntivirusOS.Core.Scanner;
 
 public class ArchiveScanner : IArchiveScanner
 {
-    private static readonly string[] SupportedExtensions = [".zip", ".rar", ".7z", ".tar", ".gz"];
+    private static readonly string[] SupportedExtensions = [".zip"];
     private const int MaxEntries = 100;
     private const long MaxEntryBytes = 50L * 1024 * 1024; // 50 MB
 
@@ -17,10 +17,10 @@ public class ArchiveScanner : IArchiveScanner
 
     public async IAsyncEnumerable<ScanResult> ScanAsync(string filePath, IFileScanner innerScanner)
     {
-        IArchive archive;
+        ZipArchive archive;
         try
         {
-            archive = ArchiveFactory.Open(filePath);
+            archive = ZipFile.OpenRead(filePath);
         }
         catch
         {
@@ -32,25 +32,22 @@ public class ArchiveScanner : IArchiveScanner
             int count = 0;
             foreach (var entry in archive.Entries)
             {
-                if (entry.IsDirectory) continue;
+                if (string.IsNullOrEmpty(entry.Name)) continue; // directory entry
                 if (count >= MaxEntries) break;
-                if (entry.Size > MaxEntryBytes) continue;
+                if (entry.Length > MaxEntryBytes) continue;
                 count++;
 
-                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + Path.GetExtension(entry.Key ?? ""));
+                var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + Path.GetExtension(entry.Name));
                 ScanResult? result = null;
                 try
                 {
-                    await using (var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                        entry.WriteTo(fs);
-
+                    entry.ExtractToFile(tempFile, overwrite: true);
                     var entryResult = await innerScanner.ScanFileAsync(tempFile);
-                    var entryPath = $"{filePath}!{entry.Key}";
-                    result = entryResult with { FilePath = entryPath };
+                    result = entryResult with { FilePath = $"{filePath}!{entry.FullName}" };
                 }
                 catch
                 {
-                    // skip corrupt/encrypted entries
+                    // skip corrupt or inaccessible entries
                 }
                 finally
                 {
