@@ -704,8 +704,37 @@ public partial class MainViewModel : ObservableObject
     private async Task RefreshReportAsync()
     {
         var history = await _scanHistory.GetAllAsync();
-        DailyStats   = _scanReporter.GetDailyStats(history, lastDays: 30);
+        DailyStats    = _scanReporter.GetDailyStats(history, lastDays: 30);
         ReportSummary = _scanReporter.GetSummary(history);
+    }
+
+    [RelayCommand]
+    private async Task ExportHtmlReportAsync()
+    {
+        var history = await _scanHistory.GetAllAsync();
+        if (!history.Any()) { ScanStatus = "Sem dados para exportar."; return; }
+
+        var dialog = new Win32Dialog.SaveFileDialog
+        {
+            Title      = "Exportar Relatório HTML",
+            Filter     = "Arquivo HTML|*.html",
+            FileName   = $"AVDON_Relatorio_{DateTime.Now:yyyyMMdd}.html",
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        try
+        {
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            var verStr = ver != null ? $"{ver.Major}.{ver.Minor}.{ver.Build}" : "—";
+            var gen = new AntivirusOS.Core.Reports.HtmlReportGenerator();
+            await gen.GenerateAsync(history, dialog.FileName, verStr);
+            ScanStatus = $"Relatório HTML exportado: {Path.GetFileName(dialog.FileName)}";
+
+            // Open in default browser
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(dialog.FileName) { UseShellExecute = true }); }
+            catch { }
+        }
+        catch (Exception ex) { ScanStatus = $"Erro ao exportar relatório: {ex.Message}"; }
     }
 
     // ---- Scheduled scan via Windows Task Scheduler ----

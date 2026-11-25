@@ -97,7 +97,10 @@ public partial class App : WinApp
             mainWindow.Activate();
         };
 
-        mainWindow.Show();
+        // Silent/background mode: start minimized to tray (e.g. launched by Task Scheduler)
+        bool silentStart = e.Args.Contains("--background", StringComparer.OrdinalIgnoreCase);
+        if (!silentStart)
+            mainWindow.Show();
     }
 
     private NotifyIcon CreateNotifyIcon()
