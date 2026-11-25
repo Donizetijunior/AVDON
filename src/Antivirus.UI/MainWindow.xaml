@@ -1896,7 +1896,155 @@
                 </Grid>
             </TabItem>
 
-            <!-- Aba 9: Integridade -->
+            <!-- Aba 9: Wi-Fi -->
+            <TabItem Header="WI-FI">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Scanner de Segurança Wi-Fi" FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Fg}"/>
+                            <TextBlock Text="Detecta redes abertas, WEP e outras configurações inseguras"
+                                       FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="📡 Escanear Redes"
+                                Command="{Binding ScanWifiCommand}"
+                                IsEnabled="{Binding IsScanningWifi, Converter={StaticResource InverseBool}}"
+                                Background="#1E293B" Foreground="{StaticResource Accent}"
+                                BorderThickness="1" BorderBrush="{StaticResource Accent}"
+                                Padding="14,8" FontSize="12" Cursor="Hand"/>
+                    </Grid>
+
+                    <!-- Summary bar -->
+                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="CONECTADO" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding ConnectedSsid}" FontSize="13"
+                                           Foreground="{StaticResource Accent}" FontWeight="SemiBold" Margin="0,2,0,0"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="SEGURANÇA" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding ConnectedSecurity}" FontSize="13"
+                                           FontWeight="SemiBold" Margin="0,2,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#34D399"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ConnectedSecurity}" Value="Open">
+                                                    <Setter Property="Foreground" Value="#FCA5A5"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ConnectedSecurity}" Value="WEP">
+                                                    <Setter Property="Foreground" Value="#FCA5A5"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ConnectedSecurity}" Value="—">
+                                                    <Setter Property="Foreground" Value="#64748B"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="REDES INSEGURAS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding WifiInsecureCount}" FontSize="20"
+                                           FontWeight="Bold" Margin="0,2,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#34D399"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WifiInsecureCount}" Value="0">
+                                                    <Setter Property="Foreground" Value="#34D399"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Text="STATUS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding WifiStatus}" FontSize="11"
+                                           Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Networks DataGrid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding WifiNetworks}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Background="#0A0F1A"
+                              RowBackground="#0A0F1A"
+                              AlternatingRowBackground="#0D1420"
+                              BorderThickness="0"
+                              GridLinesVisibility="None"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              CanUserReorderColumns="False"
+                              CanUserResizeRows="False">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsInsecure}" Value="True">
+                                        <Setter Property="Foreground" Value="#FCA5A5"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="SSID"       Binding="{Binding SSID}"           Width="*"/>
+                            <DataGridTextColumn Header="SEGURANÇA"  Binding="{Binding Security}"       Width="110"/>
+                            <DataGridTextColumn Header="SINAL"      Binding="{Binding SignalPercent, StringFormat='{}{0}%'}" Width="70"/>
+                            <DataGridTextColumn Header="CANAL"      Binding="{Binding Channel}"        Width="70"/>
+                            <DataGridTextColumn Header="BSSID"      Binding="{Binding BSSID}"          Width="150"/>
+                            <DataGridTextColumn Header="CONECTADO"  Binding="{Binding IsConnected}"    Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Spinner -->
+                    <TextBlock Grid.Row="3" Margin="0,8,0,0"
+                               Text="Escaneando redes Wi-Fi…"
+                               Foreground="{StaticResource Accent}" FontSize="11"
+                               Visibility="{Binding IsScanningWifi, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Aba 10: Integridade -->
             <TabItem Header="INTEGRIDADE">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>

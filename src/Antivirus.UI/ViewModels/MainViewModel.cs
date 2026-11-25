@@ -44,6 +44,7 @@ public partial class MainViewModel : ObservableObject
     private readonly EventLogger _eventLogger;
     private readonly StartupManager _startupManager = new();
     private readonly FileIntegrityService _integrityService;
+    private readonly WifiScanner _wifiScanner = new();
     private CancellationTokenSource? _integrityCts;
     private ScheduledScanConfig _schedConfig = new();
     private AppSettings _appSettings = new();
@@ -902,6 +903,45 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ---- App Settings ----
+
+    // ---- Wi-Fi scanner ----
+    public ObservableCollection<WifiNetwork> WifiNetworks { get; } = new();
+
+    [ObservableProperty] private bool        _isScanningWifi;
+    [ObservableProperty] private string      _wifiStatus       = "Nenhum scan executado.";
+    [ObservableProperty] private string      _connectedSsid    = "—";
+    [ObservableProperty] private string      _connectedSecurity = "—";
+    [ObservableProperty] private int         _wifiInsecureCount;
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task ScanWifiAsync()
+    {
+        IsScanningWifi = true;
+        WifiStatus = "Escaneando redes Wi-Fi…";
+        try
+        {
+            var (connected, all) = await _wifiScanner.ScanAsync();
+            WifiNetworks.Clear();
+            foreach (var n in all.OrderByDescending(n => n.IsConnected).ThenByDescending(n => n.SignalPercent))
+                WifiNetworks.Add(n);
+
+            WifiInsecureCount = all.Count(n => n.IsInsecure);
+            ConnectedSsid     = connected?.SSID ?? "Desconectado";
+            ConnectedSecurity = connected?.Security.ToString() ?? "—";
+
+            WifiStatus = all.Count == 0
+                ? "Nenhuma rede encontrada (Wi-Fi desligado?)."
+                : $"{all.Count} rede(s). {WifiInsecureCount} insegura(s).";
+
+            if (WifiInsecureCount > 0)
+                _eventLogger.Log(AntivirusOS.Core.Events.EventKind.ThreatDetected,
+                    $"Wi-Fi: {WifiInsecureCount} rede(s) insegura(s) detectada(s)",
+                    string.Join(", ", all.Where(n => n.IsInsecure).Select(n => n.SSID)));
+        }
+        catch (Exception ex) { WifiStatus = $"Erro: {ex.Message}"; }
+        finally { IsScanningWifi = false; }
+    }
 
     // ---- File integrity ----
     public ObservableCollection<IntegrityEntry> IntegrityResults { get; } = new();
