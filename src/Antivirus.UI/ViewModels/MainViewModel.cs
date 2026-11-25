@@ -236,7 +236,7 @@ public partial class MainViewModel : ObservableObject
         Antivirus.UI.Properties.Settings.Default.ClaudeApiKey = ClaudeApiKey;
         Antivirus.UI.Properties.Settings.Default.Save();
         SignatureCount = await _signatureDatabase.CountAsync();
-        MessageBox.Show("Configurações salvas.", "AntivirusOS", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show("Configurações salvas. Reinicie o aplicativo para aplicar a nova API key do Claude.", "AntivirusOS", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     [RelayCommand]
