@@ -37,4 +37,48 @@ public class FileScannerTests
 
         Assert.Equal(ThreatLevel.Clean, result.Level);
     }
+
+    [Fact]
+    public async Task ScanFile_NullHash_ReturnsCleanWithEmptyHash()
+    {
+        var hashMock = new Mock<IHashAnalyzer>();
+        hashMock.Setup(h => h.ComputeAsync(It.IsAny<string>())).ReturnsAsync((string?)null);
+        var dbMock = new Mock<ISignatureDatabase>();
+
+        var scanner = new FileScanner(hashMock.Object, dbMock.Object);
+        var result = await scanner.ScanFileAsync("C:\\locked.exe");
+
+        Assert.Equal(ThreatLevel.Clean, result.Level);
+        Assert.Equal(string.Empty, result.Hash);
+        dbMock.Verify(d => d.LookupAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ScanDirectory_ReturnsResultsForEachFile()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(tempDir, "a.txt"), "a");
+            await File.WriteAllTextAsync(Path.Combine(tempDir, "b.txt"), "b");
+
+            var hashMock = new Mock<IHashAnalyzer>();
+            hashMock.Setup(h => h.ComputeAsync(It.IsAny<string>())).ReturnsAsync("aabbcc");
+            var dbMock = new Mock<ISignatureDatabase>();
+            dbMock.Setup(d => d.LookupAsync(It.IsAny<string>())).ReturnsAsync((ThreatInfo?)null);
+
+            var scanner = new FileScanner(hashMock.Object, dbMock.Object);
+            var results = new List<ScanResult>();
+            await foreach (var r in scanner.ScanDirectoryAsync(tempDir, recursive: false))
+                results.Add(r);
+
+            Assert.Equal(2, results.Count);
+            Assert.All(results, r => Assert.Equal(ThreatLevel.Clean, r.Level));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

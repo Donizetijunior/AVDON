@@ -28,9 +28,28 @@ public class FileScanner : IFileScanner
     public async IAsyncEnumerable<ScanResult> ScanDirectoryAsync(string dirPath, bool recursive = true)
     {
         var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-        foreach (var file in Directory.EnumerateFiles(dirPath, "*", option))
+        IEnumerable<string> files;
+        try
         {
-            yield return await ScanFileAsync(file);
+            files = Directory.EnumerateFiles(dirPath, "*", option);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            yield break;
+        }
+
+        foreach (var file in files)
+        {
+            ScanResult result;
+            try
+            {
+                result = await ScanFileAsync(file);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                continue;
+            }
+            yield return result;
         }
     }
 }
