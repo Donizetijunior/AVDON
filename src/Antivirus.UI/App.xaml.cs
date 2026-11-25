@@ -15,6 +15,7 @@ using AntivirusOS.Core.Ransomware;
 using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Signatures;
 using AntivirusOS.Core.Updater;
+using AntivirusOS.Core.Events;
 using Antivirus.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using UISettings = Antivirus.UI.Properties.Settings;
@@ -349,6 +350,8 @@ public partial class App : WinApp
         services.AddSingleton<TaskSchedulerService>();
         services.AddSingleton<AntivirusOS.Core.Monitor.ProcessMonitorService>();
         services.AddSingleton<AntivirusOS.Core.Shell.ShellContextMenuService>();
+        services.AddSingleton<EventLogger>(_ =>
+            new EventLogger($"Data Source={Path.Combine(appDataPath, "events.db")}"));
         services.AddSingleton<MainViewModel>();
     }
 
@@ -356,6 +359,7 @@ public partial class App : WinApp
     {
         AvdonLogger.Instance.Info("App", "AVDON encerrando.");
         AvdonLogger.Instance.Dispose();
+        _serviceProvider?.GetService<EventLogger>()?.Dispose();
         _serviceProvider?.GetService<RansomwareGuard>()?.Dispose();
         _notifyIcon?.Dispose();
         _cts.Cancel();

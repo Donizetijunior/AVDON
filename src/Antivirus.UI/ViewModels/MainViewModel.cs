@@ -16,6 +16,7 @@ using AntivirusOS.Core.Quarantine;
 using AntivirusOS.Core.Monitor;
 using AntivirusOS.Core.Signatures;
 using AntivirusOS.Core.Updater;
+using AntivirusOS.Core.Events;
 using Microsoft.Win32;
 using WinForms = System.Windows.Forms;
 using Win32Dialog = Microsoft.Win32;
@@ -38,6 +39,7 @@ public partial class MainViewModel : ObservableObject
     private readonly TaskSchedulerService _taskScheduler;
     private readonly ProcessMonitorService _processMonitor;
     private readonly AntivirusOS.Core.Shell.ShellContextMenuService _shellMenu;
+    private readonly EventLogger _eventLogger;
     private ScheduledScanConfig _schedConfig = new();
     private AppSettings _appSettings = new();
     private readonly string _appDataPath;
@@ -202,6 +204,13 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<string> ExclusionPaths { get; } = new();
 
+    // ---- Event log ----
+    public ObservableCollection<AvdonEvent> EventLog { get; } = new();
+
+    [ObservableProperty] private int _eventsTodayCount;
+    [ObservableProperty] private string _sigDbVersion = "—";
+    [ObservableProperty] private string _sigLastUpdated = "—";
+
     public ObservableCollection<ScanResult> ScanResults { get; } = new();
     public ObservableCollection<QuarantineEntry> QuarantineEntries { get; } = new();
     public ObservableCollection<ScanResult> HistoryResults { get; } = new();
@@ -252,7 +261,8 @@ public partial class MainViewModel : ObservableObject
         ScanReporter scanReporter,
         TaskSchedulerService taskScheduler,
         ProcessMonitorService processMonitor,
-        AntivirusOS.Core.Shell.ShellContextMenuService shellMenu)
+        AntivirusOS.Core.Shell.ShellContextMenuService shellMenu,
+        EventLogger eventLogger)
     {
         _fileScanner = fileScanner;
         _quarantineManager = quarantineManager;
@@ -268,6 +278,7 @@ public partial class MainViewModel : ObservableObject
         _taskScheduler = taskScheduler;
         _processMonitor = processMonitor;
         _shellMenu = shellMenu;
+        _eventLogger = eventLogger;
         _appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AVDON");
         _schedConfig = ScheduledScanConfig.Load(_appDataPath);
@@ -307,6 +318,7 @@ public partial class MainViewModel : ObservableObject
         ClaudeApiKey = Antivirus.UI.Properties.Settings.Default.ClaudeApiKey ?? string.Empty;
 
         RefreshShellMenuState();
+        LoadEvents();
 
         // Uptime ticker — fires every second
         _uptimeTimer = new System.Timers.Timer(1000);
@@ -324,11 +336,15 @@ public partial class MainViewModel : ObservableObject
     {
         AvdonLogger.Instance.Warn("RealTimeMonitor",
             $"Ameaça detectada: {e.Result.FilePath} [{e.Result.Level}]");
+        _eventLogger.Log(EventKind.ThreatDetected,
+            $"Ameaça: {Path.GetFileName(e.Result.FilePath)} [{e.Result.Level}]",
+            e.Result.FilePath);
         Application.Current.Dispatcher.Invoke(() =>
         {
             MonitorLog += $"[{DateTime.Now:HH:mm:ss}] AMEAÇA: {e.Result.FilePath} — {e.Result.Level}\n";
             ScanResults.Insert(0, e.Result);
             ThreatsTodayCount++;
+            LoadEvents();
         });
     }
 
@@ -407,6 +423,8 @@ public partial class MainViewModel : ObservableObject
             }
             LastScanTime = DateTime.Now;
             ScanStatus = $"Scan Rápido concluído. {total} arquivo(s), {threats} ameaça(s).";
+            _eventLogger.Log(EventKind.ScanCompleted, $"Scan Rápido: {total} arquivo(s), {threats} ameaça(s)");
+            LoadEvents();
         }
         catch (OperationCanceledException) { ScanStatus = "Scan cancelado."; }
         catch (Exception ex) { ScanStatus = $"Erro: {ex.Message}"; }
@@ -449,6 +467,8 @@ public partial class MainViewModel : ObservableObject
             }
             LastScanTime = DateTime.Now;
             ScanStatus = $"Scan Completo concluído. {total:N0} arquivo(s), {threats} ameaça(s).";
+            _eventLogger.Log(EventKind.ScanCompleted, $"Scan Completo: {total:N0} arquivo(s), {threats} ameaça(s)");
+            LoadEvents();
         }
         catch (OperationCanceledException) { ScanStatus = "Scan cancelado."; }
         catch (Exception ex) { ScanStatus = $"Erro: {ex.Message}"; }
@@ -617,6 +637,11 @@ public partial class MainViewModel : ObservableObject
             var added = await _signatureUpdater.UpdateFromMalwareBazaarAsync();
             SignatureCount = await _signatureDatabase.CountAsync();
             ScanStatus = $"Assinaturas atualizadas. {added} novas. Total: {SignatureCount:N0}.";
+            SigLastUpdated = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+            SigDbVersion   = SignatureCount.ToString("N0");
+            _eventLogger.Log(EventKind.SignaturesUpdated,
+                $"Assinaturas: {added} novas. Total: {SignatureCount:N0}");
+            LoadEvents();
         }
         catch (Exception ex)
         {
@@ -866,6 +891,30 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ---- App Settings ----
+
+    // ---- Event log helpers ----
+
+    private void LoadEvents()
+    {
+        var events = _eventLogger.GetRecent(200);
+        EventsTodayCount = _eventLogger.CountToday();
+        Application.Current?.Dispatcher.Invoke(() =>
+        {
+            EventLog.Clear();
+            foreach (var ev in events)
+                EventLog.Add(ev);
+        });
+    }
+
+    [RelayCommand]
+    private void RefreshEvents() => LoadEvents();
+
+    [RelayCommand]
+    private void ClearEvents()
+    {
+        // Just clears the in-memory list; DB rows stay for auditing
+        EventLog.Clear();
+    }
 
     [ObservableProperty]
     private bool _isShellMenuRegistered;

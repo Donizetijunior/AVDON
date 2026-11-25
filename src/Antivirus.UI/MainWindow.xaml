@@ -1883,6 +1883,118 @@
                 </Grid>
             </TabItem>
 
+            <!-- Aba 9: Eventos -->
+            <TabItem Header="EVENTOS">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header row -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Histórico de Eventos" FontSize="16" FontWeight="SemiBold"
+                                   Foreground="{StaticResource Fg}" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Text="{Binding EventsTodayCount, StringFormat='Hoje: {0}'}"
+                                       Foreground="#64748B" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <Button Content="↻ Atualizar" Command="{Binding RefreshEventsCommand}"
+                                    Background="#1E293B" Foreground="{StaticResource Accent}"
+                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
+                                    Padding="12,6" FontSize="12" Cursor="Hand"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Sig DB info row -->
+                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="BASE DE ASSINATURAS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding SignatureCount, StringFormat='{}{0:N0} assinaturas'}"
+                                           FontSize="13" Foreground="{StaticResource Fg}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="ÚLTIMA ATUALIZAÇÃO" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding SigLastUpdated}" FontSize="13"
+                                           Foreground="{StaticResource Fg}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="EVENTOS HOJE" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding EventsTodayCount}" FontSize="13"
+                                           Foreground="{StaticResource Accent}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="3" Content="🔄 Atualizar Assinaturas"
+                                    Command="{Binding UpdateSignaturesCommand}"
+                                    IsEnabled="{Binding IsUpdatingSignatures, Converter={StaticResource InverseBool}}"
+                                    Background="#1E293B" Foreground="#34D399"
+                                    BorderThickness="1" BorderBrush="#34D399"
+                                    Padding="12,6" FontSize="12" Cursor="Hand" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Event list -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding EventLog}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Background="#0A0F1A"
+                              RowBackground="#0A0F1A"
+                              AlternatingRowBackground="#0D1420"
+                              BorderThickness="0"
+                              GridLinesVisibility="None"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              CanUserReorderColumns="False"
+                              CanUserResizeRows="False">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Kind}" Value="ThreatDetected">
+                                        <Setter Property="Foreground" Value="#FCA5A5"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="FileQuarantined">
+                                        <Setter Property="Foreground" Value="#FCD34D"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Kind}" Value="SignaturesUpdated">
+                                        <Setter Property="Foreground" Value="#34D399"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="DATA/HORA" Binding="{Binding Timestamp, StringFormat='dd/MM HH:mm:ss'}" Width="130"/>
+                            <DataGridTextColumn Header="TIPO"      Binding="{Binding Kind}"      Width="130"/>
+                            <DataGridTextColumn Header="RESUMO"    Binding="{Binding Summary}"   Width="*"/>
+                            <DataGridTextColumn Header="DETALHE"   Binding="{Binding Detail}"    Width="200"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
         </TabControl>
     </DockPanel>
 </Window>
