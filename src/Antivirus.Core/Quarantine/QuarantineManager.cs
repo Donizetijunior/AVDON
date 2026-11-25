@@ -8,6 +8,7 @@ public class QuarantineManager : IQuarantineManager
     private readonly string _quarantinePath;
     private readonly string _jsonPath;
     private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+    private readonly SemaphoreSlim _jsonLock = new(1, 1);
 
     public QuarantineManager(string? quarantinePath = null)
     {
@@ -27,10 +28,18 @@ public class QuarantineManager : IQuarantineManager
 
         var entry = new QuarantineEntry(filePath, destPath, hash, timestamp);
 
-        var entries = await ReadEntriesAsync();
-        var updated = entries.ToList();
-        updated.Add(entry);
-        await WriteEntriesAsync(updated);
+        await _jsonLock.WaitAsync();
+        try
+        {
+            var entries = await ReadEntriesAsync();
+            var updated = entries.ToList();
+            updated.Add(entry);
+            await WriteEntriesAsync(updated);
+        }
+        finally
+        {
+            _jsonLock.Release();
+        }
 
         return entry;
     }
@@ -39,9 +48,17 @@ public class QuarantineManager : IQuarantineManager
     {
         File.Move(entry.QuarantinePath, entry.OriginalPath);
 
-        var entries = await ReadEntriesAsync();
-        var updated = entries.Where(e => e.QuarantinePath != entry.QuarantinePath).ToList();
-        await WriteEntriesAsync(updated);
+        await _jsonLock.WaitAsync();
+        try
+        {
+            var entries = await ReadEntriesAsync();
+            var updated = entries.Where(e => e.QuarantinePath != entry.QuarantinePath).ToList();
+            await WriteEntriesAsync(updated);
+        }
+        finally
+        {
+            _jsonLock.Release();
+        }
     }
 
     public async Task DeleteAsync(QuarantineEntry entry)
@@ -49,14 +66,30 @@ public class QuarantineManager : IQuarantineManager
         if (File.Exists(entry.QuarantinePath))
             File.Delete(entry.QuarantinePath);
 
-        var entries = await ReadEntriesAsync();
-        var updated = entries.Where(e => e.QuarantinePath != entry.QuarantinePath).ToList();
-        await WriteEntriesAsync(updated);
+        await _jsonLock.WaitAsync();
+        try
+        {
+            var entries = await ReadEntriesAsync();
+            var updated = entries.Where(e => e.QuarantinePath != entry.QuarantinePath).ToList();
+            await WriteEntriesAsync(updated);
+        }
+        finally
+        {
+            _jsonLock.Release();
+        }
     }
 
     public async Task<IReadOnlyList<QuarantineEntry>> ListAsync()
     {
-        return await ReadEntriesAsync();
+        await _jsonLock.WaitAsync();
+        try
+        {
+            return await ReadEntriesAsync();
+        }
+        finally
+        {
+            _jsonLock.Release();
+        }
     }
 
     private async Task<List<QuarantineEntry>> ReadEntriesAsync()
@@ -65,12 +98,21 @@ public class QuarantineManager : IQuarantineManager
             return new List<QuarantineEntry>();
 
         var json = await File.ReadAllTextAsync(_jsonPath);
-        return JsonSerializer.Deserialize<List<QuarantineEntry>>(json, _jsonOptions) ?? new List<QuarantineEntry>();
+        try
+        {
+            return JsonSerializer.Deserialize<List<QuarantineEntry>>(json, _jsonOptions) ?? new List<QuarantineEntry>();
+        }
+        catch (JsonException)
+        {
+            return new List<QuarantineEntry>();
+        }
     }
 
     private async Task WriteEntriesAsync(List<QuarantineEntry> entries)
     {
         var json = JsonSerializer.Serialize(entries, _jsonOptions);
-        await File.WriteAllTextAsync(_jsonPath, json);
+        var tempPath = _jsonPath + ".tmp";
+        await File.WriteAllTextAsync(tempPath, json);
+        File.Move(tempPath, _jsonPath, overwrite: true);
     }
 }

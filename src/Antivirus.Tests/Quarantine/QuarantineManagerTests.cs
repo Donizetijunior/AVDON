@@ -1,3 +1,4 @@
+using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Quarantine;
 
 namespace Antivirus.Tests.Quarantine;
@@ -14,14 +15,19 @@ public class QuarantineManagerTests
         var original = Path.Combine(tempDir, "malware.exe");
         await File.WriteAllTextAsync(original, "malware content");
 
-        var entry = await manager.QuarantineAsync(original, "aabbcc");
+        QuarantineEntry entry;
+        try
+        {
+            entry = await manager.QuarantineAsync(original, "aabbcc");
 
-        Assert.False(File.Exists(original));
-        Assert.True(File.Exists(entry.QuarantinePath));
-
-        // cleanup
-        Directory.Delete(quarDir, true);
-        Directory.Delete(tempDir, true);
+            Assert.False(File.Exists(original));
+            Assert.True(File.Exists(entry.QuarantinePath));
+        }
+        finally
+        {
+            if (Directory.Exists(quarDir)) Directory.Delete(quarDir, true);
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+        }
     }
 
     [Fact]
@@ -34,15 +40,19 @@ public class QuarantineManagerTests
         var original = Path.Combine(tempDir, "malware2.exe");
         await File.WriteAllTextAsync(original, "bad content");
 
-        await manager.QuarantineAsync(original, "deadbeef");
-        var list = await manager.ListAsync();
+        try
+        {
+            await manager.QuarantineAsync(original, "deadbeef");
+            var list = await manager.ListAsync();
 
-        Assert.Single(list);
-        Assert.Equal("deadbeef", list[0].Hash);
-
-        // cleanup
-        Directory.Delete(quarDir, true);
-        Directory.Delete(tempDir, true);
+            Assert.Single(list);
+            Assert.Equal("deadbeef", list[0].Hash);
+        }
+        finally
+        {
+            if (Directory.Exists(quarDir)) Directory.Delete(quarDir, true);
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+        }
     }
 
     [Fact]
@@ -55,17 +65,21 @@ public class QuarantineManagerTests
         var original = Path.Combine(tempDir, "malware3.exe");
         await File.WriteAllTextAsync(original, "bad content again");
 
-        var entry = await manager.QuarantineAsync(original, "cafebabe");
-        await manager.RestoreAsync(entry);
+        try
+        {
+            var entry = await manager.QuarantineAsync(original, "cafebabe");
+            await manager.RestoreAsync(entry);
 
-        Assert.True(File.Exists(original));
-        Assert.False(File.Exists(entry.QuarantinePath));
+            Assert.True(File.Exists(original));
+            Assert.False(File.Exists(entry.QuarantinePath));
 
-        var list = await manager.ListAsync();
-        Assert.Empty(list);
-
-        // cleanup
-        Directory.Delete(quarDir, true);
-        Directory.Delete(tempDir, true);
+            var list = await manager.ListAsync();
+            Assert.Empty(list);
+        }
+        finally
+        {
+            if (Directory.Exists(quarDir)) Directory.Delete(quarDir, true);
+            if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true);
+        }
     }
 }
