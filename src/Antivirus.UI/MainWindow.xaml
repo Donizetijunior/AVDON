@@ -199,6 +199,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="20"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="20"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
@@ -407,8 +408,39 @@
                         </Border>
                     </UniformGrid>
 
+                    <!-- ── Live metrics row ── -->
+                    <UniformGrid Grid.Row="3" Rows="1" Columns="3" Margin="0,-12,0,0">
+                        <Border Style="{StaticResource StatCard}" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="UPTIME" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontSize="22" FontWeight="Bold"
+                                           Foreground="{StaticResource Accent}"
+                                           Text="{Binding UptimeDisplay}"/>
+                                <TextBlock Text="Tempo de execução" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCard}" Margin="4,0,4,0">
+                            <StackPanel>
+                                <TextBlock Text="AMEAÇAS HOJE" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontSize="32" FontWeight="Bold"
+                                           Foreground="{StaticResource Danger}"
+                                           Text="{Binding ThreatsTodayCount}"/>
+                                <TextBlock Text="Detectadas em tempo real" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCard}" Margin="8,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="EM QUARENTENA" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontSize="32" FontWeight="Bold"
+                                           Foreground="#F59E0B"
+                                           Text="{Binding QuarantineCountDisplay}"/>
+                                <TextBlock Text="Arquivos isolados" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
                     <!-- ── Scan progress (shown during scan) ── -->
-                    <Border Grid.Row="4" Style="{StaticResource ContentCard}"
+                    <Border Grid.Row="5" Style="{StaticResource ContentCard}"
                             Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibilityConverter}}">
                         <Grid>
                             <Grid.ColumnDefinitions>

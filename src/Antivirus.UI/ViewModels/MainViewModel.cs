@@ -166,6 +166,17 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<ProcessEntry> ProcessEntries { get; } = new();
 
+    // Dashboard / uptime
+    [ObservableProperty] private string _uptimeDisplay    = "0s";
+    [ObservableProperty] private int    _threatsTodayCount;
+    [ObservableProperty] private int    _filesScannedToday;
+    [ObservableProperty] private string _monitorStatusDisplay = "Inativo";
+    [ObservableProperty] private string _lastScanDisplay      = "—";
+    [ObservableProperty] private string _quarantineCountDisplay = "—";
+
+    private readonly DateTime _startTime = DateTime.Now;
+    private System.Timers.Timer? _uptimeTimer;
+
     // Settings
     [ObservableProperty]
     private bool _autoQuarantine = true;
@@ -291,6 +302,11 @@ public partial class MainViewModel : ObservableObject
         };
 
         ClaudeApiKey = Antivirus.UI.Properties.Settings.Default.ClaudeApiKey ?? string.Empty;
+
+        // Uptime ticker — fires every second
+        _uptimeTimer = new System.Timers.Timer(1000);
+        _uptimeTimer.Elapsed += (_, _) => RefreshDashboard();
+        _uptimeTimer.Start();
     }
 
     partial void OnIsMonitoringChanged(bool value)
@@ -307,7 +323,35 @@ public partial class MainViewModel : ObservableObject
         {
             MonitorLog += $"[{DateTime.Now:HH:mm:ss}] AMEAÇA: {e.Result.FilePath} — {e.Result.Level}\n";
             ScanResults.Insert(0, e.Result);
+            ThreatsTodayCount++;
         });
+    }
+
+    private void RefreshDashboard()
+    {
+        var elapsed = DateTime.Now - _startTime;
+        UptimeDisplay = elapsed.TotalHours >= 1
+            ? $"{(int)elapsed.TotalHours}h {elapsed.Minutes:D2}m {elapsed.Seconds:D2}s"
+            : elapsed.TotalMinutes >= 1
+                ? $"{elapsed.Minutes}m {elapsed.Seconds:D2}s"
+                : $"{elapsed.Seconds}s";
+
+        MonitorStatusDisplay = IsMonitoring ? "Ativo" : "Inativo";
+        LastScanDisplay      = LastScanTime.HasValue ? LastScanTime.Value.ToString("dd/MM HH:mm") : "—";
+        FilesScannedToday    = ScannedCount;
+
+        // Quarantine count refresh (fire-and-forget, non-blocking)
+        _ = RefreshQuarantineCountAsync();
+    }
+
+    private async Task RefreshQuarantineCountAsync()
+    {
+        try
+        {
+            var entries = await _quarantineManager.ListAsync();
+            QuarantineCountDisplay = entries.Count.ToString();
+        }
+        catch { }
     }
 
     [RelayCommand]

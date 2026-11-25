@@ -174,6 +174,21 @@ public partial class App : WinApp
                 w.Activate();
             }
         });
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("🔍 Scan Rápido", null, (s, e) =>
+        {
+            Current.Dispatcher.Invoke(() =>
+            {
+                var vm = _serviceProvider?.GetService<Antivirus.UI.ViewModels.MainViewModel>();
+                if (vm != null && !vm.IsScanning)
+                    vm.QuickScanCommand.Execute(null);
+
+                // Bring window to front
+                foreach (System.Windows.Window w in Windows)
+                { w.Show(); w.WindowState = System.Windows.WindowState.Normal; w.Activate(); break; }
+            });
+        });
+        menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Sobre", null, (s, e) =>
         {
             Current.Dispatcher.Invoke(() =>
