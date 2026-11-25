@@ -3,6 +3,11 @@ using AntivirusOS.Core.Models;
 
 namespace AntivirusOS.Core.Reports;
 
+public record DailyThreatStat(DateOnly Date, int Clean, int Suspicious, int Malicious)
+{
+    public int Total => Clean + Suspicious + Malicious;
+}
+
 public record ScanSummary(
     int Total,
     int Clean,
@@ -55,6 +60,29 @@ public class ScanReporter
             list.Min(r => r.ScannedAt),
             list.Max(r => r.ScannedAt),
             mostCommon);
+    }
+
+    public List<DailyThreatStat> GetDailyStats(IEnumerable<ScanResult> results, int lastDays = 30)
+    {
+        var since = DateTime.UtcNow.Date.AddDays(-(lastDays - 1));
+        var groups = results
+            .Where(r => r.ScannedAt >= since)
+            .GroupBy(r => DateOnly.FromDateTime(r.ScannedAt.ToUniversalTime()))
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return Enumerable.Range(0, lastDays)
+            .Select(i => DateOnly.FromDateTime(since.AddDays(i)))
+            .Select(date =>
+            {
+                if (!groups.TryGetValue(date, out var day))
+                    return new DailyThreatStat(date, 0, 0, 0);
+                return new DailyThreatStat(
+                    date,
+                    day.Count(r => r.Level == ThreatLevel.Clean),
+                    day.Count(r => r.Level == ThreatLevel.Suspicious),
+                    day.Count(r => r.Level == ThreatLevel.Malicious));
+            })
+            .ToList();
     }
 
     // RFC 4180: wrap in quotes if field contains comma, quote or newline; escape quotes by doubling

@@ -62,4 +62,24 @@ public sealed class ScanHistory : IScanHistory
         }
         return list;
     }
+
+    public async Task<IReadOnlyList<ScanResult>> GetAllAsync()
+    {
+        await using var conn = new SqliteConnection(_connectionString);
+        await conn.OpenAsync();
+        var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT file_path, hash, level, scanned_at FROM scan_history ORDER BY scanned_at DESC";
+
+        var list = new List<ScanResult>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var filePath  = reader.GetString(0);
+            var hash      = reader.GetString(1);
+            var level     = (ThreatLevel)reader.GetInt32(2);
+            var scannedAt = DateTime.Parse(reader.GetString(3));
+            list.Add(new ScanResult(filePath, hash, level, null, scannedAt));
+        }
+        return list;
+    }
 }

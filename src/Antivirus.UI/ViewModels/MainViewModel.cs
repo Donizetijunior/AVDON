@@ -7,6 +7,7 @@ using AntivirusOS.Core.DarkWeb;
 using AntivirusOS.Core.Network;
 using AntivirusOS.Core.Reports;
 using AntivirusOS.Core.Scheduler;
+using System.Collections.Generic;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Quarantine;
@@ -107,6 +108,13 @@ public partial class MainViewModel : ObservableObject
     private string _networkStatus = string.Empty;
 
     public ObservableCollection<NetworkConnectionInfo> NetworkConnections { get; } = new();
+
+    // Reports / chart
+    [ObservableProperty]
+    private List<DailyThreatStat> _dailyStats = new();
+
+    [ObservableProperty]
+    private ScanSummary? _reportSummary;
 
     // Scheduled scan
     [ObservableProperty]
@@ -675,6 +683,16 @@ public partial class MainViewModel : ObservableObject
             ScanStatus = $"Histórico exportado: {Path.GetFileName(dialog.FileName)}";
         }
         catch (Exception ex) { ScanStatus = $"Erro ao exportar: {ex.Message}"; }
+    }
+
+    // ---- Reports ----
+
+    [RelayCommand]
+    private async Task RefreshReportAsync()
+    {
+        var history = await _scanHistory.GetAllAsync();
+        DailyStats   = _scanReporter.GetDailyStats(history, lastDays: 30);
+        ReportSummary = _scanReporter.GetSummary(history);
     }
 
     // ---- Scheduled scan via Windows Task Scheduler ----

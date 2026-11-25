@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ctrl="clr-namespace:Antivirus.UI.Controls"
         mc:Ignorable="d"
         Title="AVDON" Height="620" Width="940"
         WindowStartupLocation="CenterScreen"
@@ -1381,6 +1382,125 @@
                                 <TextBlock Text="{Binding ScheduleStatus}"
                                            Foreground="#94A3B8" FontSize="12" Margin="0,6,0,0"
                                            TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Aba 6: Relatórios -->
+            <TabItem Header="RELATÓRIOS">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                    <StackPanel>
+
+                        <!-- Summary cards -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="TOTAL SCANEADOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#F1F5F9" Margin="0,4,0,0">
+                                        <TextBlock.Text>
+                                            <Binding Path="ReportSummary.Total" FallbackValue="—"/>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="1" Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="LIMPOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#22C55E" Margin="0,4,0,0">
+                                        <TextBlock.Text>
+                                            <Binding Path="ReportSummary.Clean" FallbackValue="—"/>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="SUSPEITOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#F59E0B" Margin="0,4,0,0">
+                                        <TextBlock.Text>
+                                            <Binding Path="ReportSummary.Suspicious" FallbackValue="—"/>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="3" Background="#1E293B" CornerRadius="8" Padding="12">
+                                <StackPanel>
+                                    <TextBlock Text="MALICIOSOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#EF4444" Margin="0,4,0,0">
+                                        <TextBlock.Text>
+                                            <Binding Path="ReportSummary.Malicious" FallbackValue="—"/>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Chart section -->
+                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="AMEAÇAS — ÚLTIMOS 30 DIAS"
+                                               FontSize="11" FontWeight="Bold" Foreground="#64748B"
+                                               VerticalAlignment="Center"/>
+                                    <Button Grid.Column="1" Content="↻ Atualizar"
+                                            Command="{Binding RefreshReportCommand}"
+                                            Padding="10,6" Background="#0F172A" Foreground="#94A3B8"
+                                            BorderThickness="0" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}"
+                                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </Grid>
+
+                                <ctrl:ThreatBarChart Stats="{Binding DailyStats}" Height="180"/>
+
+                                <!-- Legend -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                                    <Ellipse Width="8" Height="8" Fill="#22C55E" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Limpo" Foreground="#94A3B8" FontSize="11" Margin="4,0,16,0"/>
+                                    <Ellipse Width="8" Height="8" Fill="#F59E0B" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Suspeito" Foreground="#94A3B8" FontSize="11" Margin="4,0,16,0"/>
+                                    <Ellipse Width="8" Height="8" Fill="#EF4444" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Malicioso" Foreground="#94A3B8" FontSize="11" Margin="4,0,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Most common threat -->
+                        <Border Background="#1E293B" CornerRadius="8" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="AMEAÇA MAIS FREQUENTE" FontSize="11" FontWeight="Bold"
+                                           Foreground="#64748B" Margin="0,0,0,8"/>
+                                <TextBlock FontSize="15" Foreground="#F1F5F9" TextWrapping="Wrap">
+                                    <TextBlock.Text>
+                                        <Binding Path="ReportSummary.MostCommonThreat" FallbackValue="Nenhum dado ainda"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
                             </StackPanel>
                         </Border>
 

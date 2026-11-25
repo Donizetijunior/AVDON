@@ -7,4 +7,5 @@ public interface IScanHistory
     Task InitializeAsync();
     Task AddAsync(ScanResult result);
     Task<IReadOnlyList<ScanResult>> GetRecentAsync(int limit = 100);
+    Task<IReadOnlyList<ScanResult>> GetAllAsync();
 }
