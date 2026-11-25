@@ -30,9 +30,52 @@ public partial class App : WinApp
     private CancellationTokenSource _cts = new();
     private AntivirusOS.Core.Settings.AppSettings _appSettings = new();
 
+    // Single-instance enforcement
+    private static Mutex? _instanceMutex;
+    private static EventWaitHandle? _activateEvent;
+    private const string MutexName  = "Global\\AVDON_SingleInstance";
+    private const string EventName  = "Global\\AVDON_Activate";
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // ── Single-instance guard ───────────────────────────────────────────
+        _instanceMutex = new Mutex(initiallyOwned: true, MutexName, out bool isNewInstance);
+        if (!isNewInstance)
+        {
+            // Signal the running instance to show/activate itself
+            if (EventWaitHandle.TryOpenExisting(EventName, out var ev))
+            {
+                ev.Set();
+                ev.Dispose();
+            }
+            Shutdown();
+            return;
+        }
+
+        // Listen for activation signals from future instances
+        _activateEvent = new EventWaitHandle(false, EventResetMode.AutoReset, EventName);
+        Task.Run(() =>
+        {
+            while (true)
+            {
+                _activateEvent.WaitOne();
+                Current.Dispatcher.Invoke(() =>
+                {
+                    foreach (System.Windows.Window w in Current.Windows)
+                    {
+                        w.Show();
+                        if (w.WindowState == System.Windows.WindowState.Minimized)
+                            w.WindowState = System.Windows.WindowState.Normal;
+                        w.Activate();
+                        break;
+                    }
+                });
+            }
+        });
+        // ───────────────────────────────────────────────────────────────────
+
         AvdonLogger.Instance.Info("App", "AVDON iniciando.");
 
         var appDataPath = Path.Combine(
@@ -292,6 +335,9 @@ public partial class App : WinApp
         _cts.Cancel();
         _cts.Dispose();
         _serviceProvider?.Dispose();
+        _activateEvent?.Dispose();
+        try { _instanceMutex?.ReleaseMutex(); } catch { }
+        _instanceMutex?.Dispose();
         base.OnExit(e);
     }
 }
