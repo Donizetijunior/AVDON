@@ -253,6 +253,7 @@ public partial class App : WinApp
         services.AddSingleton<NetworkMonitor>();
         services.AddSingleton<ScanReporter>();
         services.AddSingleton<TaskSchedulerService>();
+        services.AddSingleton<AntivirusOS.Core.Monitor.ProcessMonitorService>();
         services.AddSingleton<MainViewModel>();
     }
 

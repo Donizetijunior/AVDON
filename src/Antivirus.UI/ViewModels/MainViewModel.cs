@@ -35,10 +35,12 @@ public partial class MainViewModel : ObservableObject
     private readonly NetworkMonitor _networkMonitor;
     private readonly ScanReporter _scanReporter;
     private readonly TaskSchedulerService _taskScheduler;
+    private readonly ProcessMonitorService _processMonitor;
     private ScheduledScanConfig _schedConfig = new();
     private readonly string _appDataPath;
 
     private CancellationTokenSource? _scheduledScanCts;
+    private CancellationTokenSource? _procScanCts;
     private CancellationTokenSource? _scanCts;
 
     [ObservableProperty]
@@ -153,6 +155,15 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<BreachInfo> DarkWebBreaches { get; } = new();
 
+    // Process monitor
+    [ObservableProperty]
+    private bool _isScanningProcesses;
+
+    [ObservableProperty]
+    private string _processStatus = string.Empty;
+
+    public ObservableCollection<ProcessEntry> ProcessEntries { get; } = new();
+
     public ObservableCollection<ScanResult> ScanResults { get; } = new();
     public ObservableCollection<QuarantineEntry> QuarantineEntries { get; } = new();
     public ObservableCollection<ScanResult> HistoryResults { get; } = new();
@@ -201,7 +212,8 @@ public partial class MainViewModel : ObservableObject
         DnsBlocker dnsBlocker,
         NetworkMonitor networkMonitor,
         ScanReporter scanReporter,
-        TaskSchedulerService taskScheduler)
+        TaskSchedulerService taskScheduler,
+        ProcessMonitorService processMonitor)
     {
         _fileScanner = fileScanner;
         _quarantineManager = quarantineManager;
@@ -215,6 +227,7 @@ public partial class MainViewModel : ObservableObject
         _networkMonitor = networkMonitor;
         _scanReporter = scanReporter;
         _taskScheduler = taskScheduler;
+        _processMonitor = processMonitor;
         _appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AVDON");
         _schedConfig = ScheduledScanConfig.Load(_appDataPath);
@@ -706,6 +719,37 @@ public partial class MainViewModel : ObservableObject
         var history = await _scanHistory.GetAllAsync();
         DailyStats    = _scanReporter.GetDailyStats(history, lastDays: 30);
         ReportSummary = _scanReporter.GetSummary(history);
+    }
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task ScanProcessesAsync()
+    {
+        if (IsScanningProcesses)
+        {
+            _procScanCts?.Cancel();
+            return;
+        }
+
+        _procScanCts = new CancellationTokenSource();
+        IsScanningProcesses = true;
+        ProcessStatus = "Escaneando processos…";
+        ProcessEntries.Clear();
+
+        try
+        {
+            var entries = await _processMonitor.ScanAsync(_procScanCts.Token);
+            foreach (var e in entries)
+                ProcessEntries.Add(e);
+
+            int threats = entries.Count(e => e.Level != AntivirusOS.Core.Models.ThreatLevel.Clean);
+            ProcessStatus = threats == 0
+                ? $"{entries.Count} processos verificados — sem ameaças."
+                : $"⚠ {threats} processo(s) suspeito(s) em {entries.Count} verificados.";
+        }
+        catch (OperationCanceledException) { ProcessStatus = "Scan de processos cancelado."; }
+        catch (Exception ex)               { ProcessStatus = $"Erro: {ex.Message}"; }
+        finally { IsScanningProcesses = false; }
     }
 
     [RelayCommand]

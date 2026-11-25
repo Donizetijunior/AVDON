@@ -1561,6 +1561,88 @@
                 </ScrollViewer>
             </TabItem>
 
+            <!-- Aba 7: Processos -->
+            <TabItem Header="PROCESSOS">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header row -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource SectionHeader}" Margin="0" Text="MONITOR DE PROCESSOS"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="{Binding IsScanningProcesses, Converter={StaticResource MonitorButtonConverter},
+                                                       ConverterParameter='Parar Scan|🔍 Escanear Processos'}"
+                                    Command="{Binding ScanProcessesCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    MinWidth="160"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Status bar -->
+                    <Border Grid.Row="1" Background="#1E293B" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
+                        <TextBlock Text="{Binding ProcessStatus}" Foreground="#94A3B8" FontSize="12"/>
+                    </Border>
+
+                    <!-- Process DataGrid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding ProcessEntries}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Background="#0F172A"
+                              Foreground="{StaticResource Fg}"
+                              BorderThickness="0"
+                              RowBackground="#0F172A"
+                              AlternatingRowBackground="#1E293B"
+                              GridLinesVisibility="None"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              CanUserReorderColumns="False"
+                              CanUserResizeRows="False">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Level}" Value="Malicious">
+                                        <Setter Property="Foreground" Value="#FCA5A5"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="Suspicious">
+                                        <Setter Property="Foreground" Value="#FCD34D"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="PID"     Binding="{Binding Pid}"          Width="60"/>
+                            <DataGridTextColumn Header="PROCESSO" Binding="{Binding Name}"         Width="160"/>
+                            <DataGridTextColumn Header="NÍVEL"   Binding="{Binding Level}"         Width="90"/>
+                            <DataGridTextColumn Header="RAM (MB)" Binding="{Binding WorkingSetMB}" Width="80"/>
+                            <DataGridTextColumn Header="NOTA"    Binding="{Binding LevelNote}"     Width="140"/>
+                            <DataGridTextColumn Header="CAMINHO" Binding="{Binding FilePath}"      Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
         </TabControl>
     </DockPanel>
 </Window>
