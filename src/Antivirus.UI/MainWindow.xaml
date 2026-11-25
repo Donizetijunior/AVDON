@@ -1324,6 +1324,66 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Scheduled Scan Section -->
+                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,16,0,0">
+                            <StackPanel>
+                                <TextBlock Text="SCAN AGENDADO" FontSize="11" FontWeight="Bold"
+                                           Foreground="#64748B" Margin="0,0,0,12"/>
+
+                                <TextBlock Text="Registra uma tarefa no Agendador do Windows para executar scans automáticos mesmo com a janela fechada."
+                                           Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <!-- Interval picker -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <TextBlock Text="Intervalo (horas):" Foreground="#CBD5E1"
+                                               FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <TextBox Width="60" Text="{Binding ScheduleIntervalHours, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="#0F172A" Foreground="#F1F5F9"
+                                             BorderBrush="#334155" BorderThickness="1"
+                                             Padding="6,4" FontSize="13"/>
+                                </StackPanel>
+
+                                <!-- Buttons -->
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Button Content="Ativar Agendamento"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding EnableTaskScheduleCommand}"
+                                            IsEnabled="{Binding IsScheduleEnabled, Converter={StaticResource InverseBoolConverter}}"
+                                            Margin="0,0,8,0"/>
+                                    <Button Content="Desativar"
+                                            Command="{Binding DisableTaskScheduleCommand}"
+                                            IsEnabled="{Binding IsScheduleEnabled}"
+                                            Padding="12,8" Background="#1E293B" Foreground="#94A3B8"
+                                            BorderThickness="0" Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}"
+                                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Next run -->
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                    <TextBlock Text="Próximo scan: " Foreground="#64748B" FontSize="12"/>
+                                    <TextBlock Text="{Binding ScheduleNextRun}" Foreground="#94A3B8" FontSize="12"/>
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding ScheduleStatus}"
+                                           Foreground="#94A3B8" FontSize="12" Margin="0,6,0,0"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

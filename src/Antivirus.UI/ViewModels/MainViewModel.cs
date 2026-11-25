@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using AntivirusOS.Core.DarkWeb;
 using AntivirusOS.Core.Network;
 using AntivirusOS.Core.Reports;
+using AntivirusOS.Core.Scheduler;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Quarantine;
@@ -31,6 +32,9 @@ public partial class MainViewModel : ObservableObject
     private readonly DnsBlocker _dnsBlocker;
     private readonly NetworkMonitor _networkMonitor;
     private readonly ScanReporter _scanReporter;
+    private readonly TaskSchedulerService _taskScheduler;
+    private ScheduledScanConfig _schedConfig = new();
+    private readonly string _appDataPath;
 
     private CancellationTokenSource? _scheduledScanCts;
     private CancellationTokenSource? _scanCts;
@@ -104,6 +108,21 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<NetworkConnectionInfo> NetworkConnections { get; } = new();
 
+    // Scheduled scan
+    [ObservableProperty]
+    private bool _isScheduleEnabled;
+
+    [ObservableProperty]
+    private int _scheduleIntervalHours = 24;
+
+    [ObservableProperty]
+    private string _scheduleStatus = string.Empty;
+
+    [ObservableProperty]
+    private string _scheduleNextRun = string.Empty;
+
+    public bool IsTaskSchedulerRegistered => _taskScheduler.IsRegistered();
+
     // DNS blocking
     [ObservableProperty]
     private bool _isDnsBlocking;
@@ -172,7 +191,8 @@ public partial class MainViewModel : ObservableObject
         DarkWebMonitor darkWebMonitor,
         DnsBlocker dnsBlocker,
         NetworkMonitor networkMonitor,
-        ScanReporter scanReporter)
+        ScanReporter scanReporter,
+        TaskSchedulerService taskScheduler)
     {
         _fileScanner = fileScanner;
         _quarantineManager = quarantineManager;
@@ -185,6 +205,13 @@ public partial class MainViewModel : ObservableObject
         _dnsBlocker = dnsBlocker;
         _networkMonitor = networkMonitor;
         _scanReporter = scanReporter;
+        _taskScheduler = taskScheduler;
+        _appDataPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AVDON");
+        _schedConfig = ScheduledScanConfig.Load(_appDataPath);
+        _isScheduleEnabled = _schedConfig.Enabled;
+        _scheduleIntervalHours = _schedConfig.IntervalHours;
+        RefreshScheduleDisplay();
 
         _realTimeMonitor.ThreatDetected += OnThreatDetected;
 
@@ -648,6 +675,53 @@ public partial class MainViewModel : ObservableObject
             ScanStatus = $"Histórico exportado: {Path.GetFileName(dialog.FileName)}";
         }
         catch (Exception ex) { ScanStatus = $"Erro ao exportar: {ex.Message}"; }
+    }
+
+    // ---- Scheduled scan via Windows Task Scheduler ----
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void EnableTaskSchedule()
+    {
+        var exe = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
+                  ?? Environment.ProcessPath ?? string.Empty;
+        if (string.IsNullOrEmpty(exe)) { ScheduleStatus = "Não foi possível obter o caminho do executável."; return; }
+
+        _schedConfig.Enabled = true;
+        _schedConfig.IntervalHours = ScheduleIntervalHours;
+        _schedConfig.NextRun = DateTime.Now.AddHours(ScheduleIntervalHours);
+        _schedConfig.Save(_appDataPath);
+
+        var (ok, msg) = _taskScheduler.Register(exe, ScheduleIntervalHours);
+        IsScheduleEnabled = ok;
+        ScheduleStatus = msg;
+        RefreshScheduleDisplay();
+        OnPropertyChanged(nameof(IsTaskSchedulerRegistered));
+    }
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void DisableTaskSchedule()
+    {
+        _schedConfig.Enabled = false;
+        _schedConfig.NextRun = null;
+        _schedConfig.Save(_appDataPath);
+
+        var (_, msg) = _taskScheduler.Unregister();
+        IsScheduleEnabled = false;
+        ScheduleStatus = msg;
+        ScheduleNextRun = string.Empty;
+        OnPropertyChanged(nameof(IsTaskSchedulerRegistered));
+    }
+
+    private void RefreshScheduleDisplay()
+    {
+        ScheduleNextRun = _schedConfig.NextRun.HasValue
+            ? _schedConfig.NextRun.Value.ToString("dd/MM/yyyy HH:mm")
+            : "Não agendado";
+        ScheduleStatus = _schedConfig.Enabled
+            ? $"Ativo — a cada {_schedConfig.IntervalHours}h"
+            : "Desativado";
     }
 
     public async Task InitializeAsync()
