@@ -7,12 +7,19 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <AssemblyName>AntivirusOS</AssemblyName>
+    <AssemblyName>AVDON</AssemblyName>
+    <Product>AVDON</Product>
+    <AssemblyTitle>AVDON</AssemblyTitle>
+    <ApplicationIcon>Resources\avdon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\avdon.ico"/>
   </ItemGroup>
 
   <ItemGroup>

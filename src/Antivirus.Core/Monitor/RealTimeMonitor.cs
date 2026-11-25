@@ -9,12 +9,14 @@ public class RealTimeMonitor : IRealTimeMonitor, IDisposable
 {
     private readonly IFileScanner _scanner;
     private readonly IQuarantineManager _quarantineManager;
-    private FileSystemWatcher? _watcher;
+    private readonly List<FileSystemWatcher> _watchers = [];
+    private readonly List<string> _monitoredPaths = [];
     private Channel<string>? _channel;
     private CancellationTokenSource? _cts;
     private Task? _consumerTask;
 
     public event EventHandler<FileDetectedEventArgs>? ThreatDetected;
+    public IReadOnlyList<string> MonitoredPaths => _monitoredPaths.AsReadOnly();
 
     public RealTimeMonitor(IFileScanner scanner, IQuarantineManager quarantineManager)
     {
@@ -22,7 +24,9 @@ public class RealTimeMonitor : IRealTimeMonitor, IDisposable
         _quarantineManager = quarantineManager;
     }
 
-    public void StartMonitoring(string path)
+    public void StartMonitoring(string path) => StartMonitoring([path]);
+
+    public void StartMonitoring(IEnumerable<string> paths)
     {
         StopMonitoring();
 
@@ -30,21 +34,28 @@ public class RealTimeMonitor : IRealTimeMonitor, IDisposable
         _cts = new CancellationTokenSource();
         _consumerTask = Task.Run(() => ConsumeAsync(_cts.Token));
 
-        _watcher = new FileSystemWatcher(path)
+        foreach (var path in paths.Where(Directory.Exists).Distinct())
         {
-            InternalBufferSize = 65536,
-            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
-            EnableRaisingEvents = true
-        };
-        _watcher.Created += OnFileEvent;
-        _watcher.Changed += OnFileEvent;
-        _watcher.Error += OnError;
+            var watcher = new FileSystemWatcher(path)
+            {
+                InternalBufferSize = 65536,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+                EnableRaisingEvents = true
+            };
+            watcher.Created += OnFileEvent;
+            watcher.Changed += OnFileEvent;
+            watcher.Error += OnError;
+            _watchers.Add(watcher);
+            _monitoredPaths.Add(path);
+        }
     }
 
     public void StopMonitoring()
     {
-        _watcher?.Dispose();
-        _watcher = null;
+        foreach (var w in _watchers)
+            w.Dispose();
+        _watchers.Clear();
+        _monitoredPaths.Clear();
 
         _channel?.Writer.TryComplete();
         _cts?.Cancel();

@@ -1,3 +1,4 @@
+using AntivirusOS.Core.AI;
 using AntivirusOS.Core.Analysis;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Signatures;
@@ -13,6 +14,7 @@ public class FileScanner : IFileScanner
     private readonly IYaraScanner? _yaraScanner;
     private readonly IAuthenticodeChecker? _authenticodeChecker;
     private readonly IScanCache? _scanCache;
+    private readonly IClaudeAnalyzer? _claudeAnalyzer;
 
     public FileScanner(
         IHashAnalyzer hashAnalyzer,
@@ -21,7 +23,8 @@ public class FileScanner : IFileScanner
         IPeAnalyzer? peAnalyzer = null,
         IYaraScanner? yaraScanner = null,
         IAuthenticodeChecker? authenticodeChecker = null,
-        IScanCache? scanCache = null)
+        IScanCache? scanCache = null,
+        IClaudeAnalyzer? claudeAnalyzer = null)
     {
         _hashAnalyzer = hashAnalyzer;
         _signatureDatabase = signatureDatabase;
@@ -30,6 +33,7 @@ public class FileScanner : IFileScanner
         _yaraScanner = yaraScanner;
         _authenticodeChecker = authenticodeChecker;
         _scanCache = scanCache;
+        _claudeAnalyzer = claudeAnalyzer;
     }
 
     public async Task<ScanResult> ScanFileAsync(string filePath)
@@ -102,6 +106,21 @@ public class FileScanner : IFileScanner
                     resolvedThreat = new ThreatInfo(hash, "Suspicious PE", ThreatLevel.Suspicious, indicators);
                 }
             }
+        }
+
+        // Claude AI: escalate Suspicious files with AI analysis
+        if (_claudeAnalyzer != null && level == ThreatLevel.Suspicious)
+        {
+            try
+            {
+                var aiResult = await _claudeAnalyzer.AnalyzeFileAsync(filePath, hash);
+                if (aiResult.IsSuspicious && aiResult.SuggestedLevel > level)
+                {
+                    level = aiResult.SuggestedLevel;
+                    resolvedThreat = new ThreatInfo(hash, $"AI: {aiResult.Reasoning}", level, aiResult.Reasoning);
+                }
+            }
+            catch { }
         }
 
         var result = new ScanResult(filePath, hash, level, resolvedThreat, DateTime.UtcNow);

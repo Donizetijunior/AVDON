@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using AntivirusOS.Core.DarkWeb;
+using AntivirusOS.Core.Network;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Quarantine;
@@ -23,8 +26,11 @@ public partial class MainViewModel : ObservableObject
     private readonly ISignatureDatabase _signatureDatabase;
     private readonly IScanHistory _scanHistory;
     private readonly ScheduledScanner _scheduledScanner;
+    private readonly DarkWebMonitor _darkWebMonitor;
+    private readonly DnsBlocker _dnsBlocker;
 
     private CancellationTokenSource? _scheduledScanCts;
+    private CancellationTokenSource? _scanCts;
 
     [ObservableProperty]
     private string _scanStatus = "Pronto.";
@@ -56,13 +62,53 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string _scheduledScanPath = string.Empty;
 
+    [ObservableProperty]
+    private string _scanPath = string.Empty;
+
+    [ObservableProperty]
+    private int _scannedCount;
+
+    [ObservableProperty]
+    private string _currentScanFile = string.Empty;
+
+    [ObservableProperty]
+    private DateTime? _lastScanTime;
+
+    [ObservableProperty]
+    private int _totalThreatsBlocked;
+
+    // DNS blocking
+    [ObservableProperty]
+    private bool _isDnsBlocking;
+
+    [ObservableProperty]
+    private string _dnsBlockStatus = string.Empty;
+
+    public bool IsAdmin => new DnsBlocker().IsAdministrator();
+
+    // Dark web monitoring
+    [ObservableProperty]
+    private string _darkWebEmail = string.Empty;
+
+    [ObservableProperty]
+    private bool _isDarkWebChecking;
+
+    [ObservableProperty]
+    private string _darkWebStatus = string.Empty;
+
+    public ObservableCollection<BreachInfo> DarkWebBreaches { get; } = new();
+
     public ObservableCollection<ScanResult> ScanResults { get; } = new();
     public ObservableCollection<QuarantineEntry> QuarantineEntries { get; } = new();
     public ObservableCollection<ScanResult> HistoryResults { get; } = new();
 
+    public int CleanCount    => ScanResults.Count(r => r.Level == ThreatLevel.Clean);
+    public int ThreatCount   => ScanResults.Count(r => r.Level != ThreatLevel.Clean);
+    public bool IsApiKeySet  => !string.IsNullOrWhiteSpace(ClaudeApiKey);
+
     // ---- Start with Windows (Registry) ----
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string AppName = "AntivirusOS";
+    private const string AppName = "AVDON";
 
     public bool StartWithWindows
     {
@@ -95,7 +141,9 @@ public partial class MainViewModel : ObservableObject
         ISignatureUpdater signatureUpdater,
         ISignatureDatabase signatureDatabase,
         IScanHistory scanHistory,
-        ScheduledScanner scheduledScanner)
+        ScheduledScanner scheduledScanner,
+        DarkWebMonitor darkWebMonitor,
+        DnsBlocker dnsBlocker)
     {
         _fileScanner = fileScanner;
         _quarantineManager = quarantineManager;
@@ -104,8 +152,22 @@ public partial class MainViewModel : ObservableObject
         _signatureDatabase = signatureDatabase;
         _scanHistory = scanHistory;
         _scheduledScanner = scheduledScanner;
+        _darkWebMonitor = darkWebMonitor;
+        _dnsBlocker = dnsBlocker;
 
         _realTimeMonitor.ThreatDetected += OnThreatDetected;
+
+        ScanResults.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(CleanCount));
+            OnPropertyChanged(nameof(ThreatCount));
+        };
+
+        PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(ClaudeApiKey))
+                OnPropertyChanged(nameof(IsApiKeySet));
+        };
 
         ClaudeApiKey = Antivirus.UI.Properties.Settings.Default.ClaudeApiKey ?? string.Empty;
     }
@@ -117,6 +179,102 @@ public partial class MainViewModel : ObservableObject
             MonitorLog += $"[{DateTime.Now:HH:mm:ss}] AMEAÇA: {e.Result.FilePath} — {e.Result.Level}\n";
             ScanResults.Insert(0, e.Result);
         });
+    }
+
+    [RelayCommand]
+    private void CancelScan()
+    {
+        _scanCts?.Cancel();
+        ScanStatus = "Scan cancelado.";
+    }
+
+    [RelayCommand]
+    private async Task QuickScanAsync()
+    {
+        var quickPaths = new[]
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.InternetCache),
+            Path.GetTempPath(),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),
+            Environment.GetFolderPath(Environment.SpecialFolder.Startup),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                @"Microsoft\Windows\Start Menu\Programs\Startup"),
+        };
+
+        _scanCts = new CancellationTokenSource();
+        IsScanning = true;
+        ScannedCount = 0;
+        CurrentScanFile = string.Empty;
+        ScanStatus = "Scan Rápido em andamento…";
+        int total = 0, threats = 0;
+        try
+        {
+            foreach (var folder in quickPaths.Where(Directory.Exists).Distinct())
+            {
+                await foreach (var result in _fileScanner.ScanDirectoryAsync(folder, recursive: false))
+                {
+                    _scanCts.Token.ThrowIfCancellationRequested();
+                    total++;
+                    ScannedCount = total;
+                    CurrentScanFile = Path.GetFileName(result.FilePath);
+                    ScanStatus = $"Scan Rápido — {total} arquivo(s)…";
+                    if (result.Level != ThreatLevel.Clean)
+                    {
+                        threats++;
+                        TotalThreatsBlocked++;
+                        ScanResults.Insert(0, result);
+                        await _scanHistory.AddAsync(result);
+                    }
+                }
+            }
+            LastScanTime = DateTime.Now;
+            ScanStatus = $"Scan Rápido concluído. {total} arquivo(s), {threats} ameaça(s).";
+        }
+        catch (OperationCanceledException) { ScanStatus = "Scan cancelado."; }
+        catch (Exception ex) { ScanStatus = $"Erro: {ex.Message}"; }
+        finally { IsScanning = false; CurrentScanFile = string.Empty; _scanCts?.Dispose(); _scanCts = null; }
+    }
+
+    [RelayCommand]
+    private async Task FullScanAsync()
+    {
+        _scanCts = new CancellationTokenSource();
+        IsScanning = true;
+        ScannedCount = 0;
+        CurrentScanFile = string.Empty;
+        ScanStatus = "Scan Completo em andamento — isso pode demorar…";
+        int total = 0, threats = 0;
+        try
+        {
+            var drives = DriveInfo.GetDrives()
+                .Where(d => d.DriveType == DriveType.Fixed && d.IsReady)
+                .Select(d => d.RootDirectory.FullName);
+
+            foreach (var drive in drives)
+            {
+                await foreach (var result in _fileScanner.ScanDirectoryAsync(drive, recursive: true))
+                {
+                    _scanCts.Token.ThrowIfCancellationRequested();
+                    total++;
+                    ScannedCount = total;
+                    CurrentScanFile = Path.GetFileName(result.FilePath);
+                    if (total % 50 == 0)
+                        ScanStatus = $"Scan Completo — {total:N0} arquivo(s)…";
+                    if (result.Level != ThreatLevel.Clean)
+                    {
+                        threats++;
+                        TotalThreatsBlocked++;
+                        ScanResults.Insert(0, result);
+                        await _scanHistory.AddAsync(result);
+                    }
+                }
+            }
+            LastScanTime = DateTime.Now;
+            ScanStatus = $"Scan Completo concluído. {total:N0} arquivo(s), {threats} ameaça(s).";
+        }
+        catch (OperationCanceledException) { ScanStatus = "Scan cancelado."; }
+        catch (Exception ex) { ScanStatus = $"Erro: {ex.Message}"; }
+        finally { IsScanning = false; CurrentScanFile = string.Empty; _scanCts?.Dispose(); _scanCts = null; }
     }
 
     [RelayCommand]
@@ -186,22 +344,24 @@ public partial class MainViewModel : ObservableObject
         {
             _realTimeMonitor.StopMonitoring();
             IsMonitoring = false;
+            MonitoredPath = string.Empty;
             MonitorLog += $"[{DateTime.Now:HH:mm:ss}] Monitoramento parado.\n";
         }
         else
         {
-            if (string.IsNullOrWhiteSpace(MonitoredPath))
+            // Re-start critical folder monitoring
+            var criticalPaths = new[]
             {
-                var dialog = new WinForms.FolderBrowserDialog
-                {
-                    Description = "Selecionar pasta para monitorar"
-                };
-                if (dialog.ShowDialog() != WinForms.DialogResult.OK) return;
-                MonitoredPath = dialog.SelectedPath;
-            }
-            _realTimeMonitor.StartMonitoring(MonitoredPath);
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                Environment.GetFolderPath(Environment.SpecialFolder.Startup),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    @"Microsoft\Windows\Start Menu\Programs\Startup"),
+            };
+            _realTimeMonitor.StartMonitoring(criticalPaths);
             IsMonitoring = true;
-            MonitorLog += $"[{DateTime.Now:HH:mm:ss}] Monitorando: {MonitoredPath}\n";
+            MonitoredPath = "Pastas críticas";
+            MonitorLog += $"[{DateTime.Now:HH:mm:ss}] Monitorando: Downloads, Área de Trabalho, Inicialização\n";
         }
     }
 
@@ -273,6 +433,65 @@ public partial class MainViewModel : ObservableObject
         finally
         {
             IsUpdatingSignatures = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task EnableDnsBlockingAsync()
+    {
+        IsDnsBlocking = true;
+        DnsBlockStatus = "Aplicando bloqueio DNS…";
+        try
+        {
+            var (success, msg) = await _dnsBlocker.ApplyBlockListAsync(AntivirusOS.Core.Network.DnsBlocker.DefaultBlockList);
+            DnsBlockStatus = success ? $"✓ {msg}" : $"✗ {msg}";
+        }
+        catch (Exception ex) { DnsBlockStatus = $"Erro: {ex.Message}"; }
+        finally { IsDnsBlocking = false; }
+    }
+
+    [RelayCommand]
+    private async Task DisableDnsBlockingAsync()
+    {
+        IsDnsBlocking = true;
+        DnsBlockStatus = "Removendo bloqueio DNS…";
+        try
+        {
+            var (success, msg) = await _dnsBlocker.ClearBlockListAsync();
+            DnsBlockStatus = success ? $"✓ {msg}" : $"✗ {msg}";
+        }
+        catch (Exception ex) { DnsBlockStatus = $"Erro: {ex.Message}"; }
+        finally { IsDnsBlocking = false; }
+    }
+
+    [RelayCommand]
+    private async Task CheckDarkWebAsync()
+    {
+        if (string.IsNullOrWhiteSpace(DarkWebEmail)) return;
+        IsDarkWebChecking = true;
+        DarkWebStatus = "Verificando vazamentos de dados…";
+        DarkWebBreaches.Clear();
+        try
+        {
+            var breaches = await _darkWebMonitor.CheckEmailAsync(DarkWebEmail);
+            if (breaches.Count == 0)
+            {
+                DarkWebStatus = $"Nenhum vazamento encontrado para {DarkWebEmail}";
+            }
+            else
+            {
+                foreach (var b in breaches)
+                    DarkWebBreaches.Add(b);
+                DarkWebStatus = $"⚠ {breaches.Count} vazamento(s) encontrado(s) para {DarkWebEmail}";
+            }
+        }
+        catch (Exception ex)
+        {
+            DarkWebStatus = $"Erro: {ex.Message}";
+        }
+        finally
+        {
+            IsDarkWebChecking = false;
         }
     }
 

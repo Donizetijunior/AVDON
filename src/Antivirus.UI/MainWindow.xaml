@@ -4,282 +4,1098 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="AntivirusOS" Height="600" Width="900"
-        WindowStartupLocation="CenterScreen">
+        Title="AVDON" Height="620" Width="940"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResizeWithGrip"
+        Background="{StaticResource Bg}"
+        Foreground="{StaticResource Fg}"
+        FontFamily="Segoe UI Variable Text, Segoe UI">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="6"
+                      GlassFrameThickness="0" CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
 
     <DockPanel>
-        <!-- Status bar -->
+
+        <!-- ── CUSTOM TITLE BAR ───────────────────────── -->
+        <Border DockPanel.Dock="Top" Height="40"
+                Background="{StaticResource Surface}"
+                MouseLeftButtonDown="TitleBar_MouseLeftButtonDown"
+                WindowChrome.IsHitTestVisibleInChrome="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Logo -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0"
+                            IsHitTestVisible="True">
+                    <!-- Shield (Viewbox-based for crisp render) -->
+                    <Viewbox Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <Canvas Width="22" Height="24">
+                            <Polygon Points="11,0 22,5 22,14 11,24 0,14 0,5"
+                                     Fill="{StaticResource Accent}" Opacity="0.15"/>
+                            <Polygon Points="11,1.5 20.5,6 20.5,14 11,22.5 1.5,14 1.5,6"
+                                     Fill="Transparent"
+                                     Stroke="{StaticResource Accent}" StrokeThickness="1.4"/>
+                            <TextBlock Canvas.Left="6" Canvas.Top="3.5"
+                                       Text="A" FontSize="12" FontWeight="Bold"
+                                       Foreground="{StaticResource Accent}"
+                                       FontFamily="Segoe UI Variable Display, Segoe UI"/>
+                        </Canvas>
+                    </Viewbox>
+                    <!-- Wordmark -->
+                    <TextBlock VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold"
+                               Foreground="{StaticResource Fg}">
+                        <Run Text="AV"/>
+                        <Run Text="DON" Foreground="{StaticResource Accent}"/>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- Window controls — Windows 11 style -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Stretch"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+
+                    <!-- Minimize -->
+                    <Button Click="Minimize_Click" Width="46" Height="40" Padding="0" BorderThickness="0"
+                            ToolTip="Minimizar" Background="Transparent" Cursor="Arrow">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent">
+                                    <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                               Foreground="{StaticResource FgMuted}"
+                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#18FFFFFF"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#28FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <!-- Maximize / Restore -->
+                    <Button Click="MaxRestore_Click" Width="46" Height="40" Padding="0" BorderThickness="0"
+                            ToolTip="Maximizar" Background="Transparent" Cursor="Arrow">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent">
+                                    <TextBlock x:Name="icon" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                               Foreground="{StaticResource FgMuted}"
+                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#18FFFFFF"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#28FFFFFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                    <!-- Close -->
+                    <Button Click="Close_Click" Width="46" Height="40" Padding="0" BorderThickness="0"
+                            ToolTip="Fechar" Background="Transparent" Cursor="Arrow">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="bg" Background="Transparent">
+                                    <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"
+                                               Foreground="{StaticResource FgMuted}"
+                                               VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#C42B1C"/>
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter TargetName="bg" Property="Background" Value="#E81123"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ── STATUS BAR ─────────────────────────────── -->
         <StatusBar DockPanel.Dock="Bottom">
             <StatusBarItem>
-                <TextBlock Text="{Binding ScanStatus}"/>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="8" Height="8" Margin="0,0,7,0" VerticalAlignment="Center">
+                        <Ellipse.Style>
+                            <Style TargetType="Ellipse">
+                                <Setter Property="Fill" Value="{StaticResource FgDim}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                        <Setter Property="Fill" Value="{StaticResource Safe}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsScanning}" Value="True">
+                                        <Setter Property="Fill" Value="{StaticResource Accent}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Ellipse.Style>
+                    </Ellipse>
+                    <TextBlock Text="{Binding ScanStatus}" Foreground="{StaticResource FgMuted}" FontSize="12"/>
+                </StackPanel>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Foreground="{StaticResource FgDim}" FontSize="11" Margin="0,0,8,0">
+                    <Run Text="{Binding SignatureCount, StringFormat=\{0:N0\}}"/>
+                    <Run Text=" assinaturas"/>
+                </TextBlock>
             </StatusBarItem>
         </StatusBar>
 
-        <TabControl Margin="8">
+        <!-- ── MAIN TABCONTROL WITH SIDEBAR ──────────── -->
+        <TabControl Style="{StaticResource SidebarTabControl}">
 
-            <!-- ===================== ABA 1: SCAN ===================== -->
-            <TabItem Header="🔍 Escanear">
-                <Grid Margin="8">
+            <!-- ════════════════════════════════════════
+                 ABA 0: DASHBOARD
+                 Segoe MDL2: E80F = Home
+            ════════════════════════════════════════ -->
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Início" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <Grid Margin="28,24,28,24">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="20"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- Toolbar -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal">
-                        <Button Content="📄 Escanear Arquivo"
-                                Command="{Binding ScanFileCommand}"
-                                IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
-                        <Button Content="📁 Escanear Pasta"
-                                Command="{Binding ScanFolderCommand}"
-                                IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
-                        <ProgressBar IsIndeterminate="True" Width="120" Height="20" Margin="8,0"
-                                     Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                    </StackPanel>
+                    <!-- ── Status Shield ── -->
+                    <Border Grid.Row="0" Style="{StaticResource ContentCard}" Padding="32,28">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                    <!-- Results list -->
-                    <DataGrid Grid.Row="1" Margin="0,8,0,0"
-                              ItemsSource="{Binding ScanResults}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              AlternatingRowBackground="#F5F5F5"
-                              GridLinesVisibility="Horizontal">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Nível" Width="90"
-                                               Binding="{Binding Level}"/>
-                            <DataGridTextColumn Header="Arquivo" Width="*"
-                                               Binding="{Binding FilePath}"/>
-                            <DataGridTextColumn Header="Hash (SHA-256)" Width="300"
-                                               Binding="{Binding Hash}"/>
-                            <DataGridTextColumn Header="Data" Width="150"
-                                               Binding="{Binding ScannedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
-                            <DataGridTemplateColumn Header="Ação" Width="120">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Content="Quarentenar"
-                                                Command="{Binding DataContext.QuarantineResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Padding="4,2" Margin="2"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                            <!-- Big shield circle -->
+                            <Grid Grid.Column="0" Width="90" Height="90" Margin="0,0,28,0">
+                                <Ellipse>
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="#2600C853"/>
+                                            <Setter Property="Stroke" Value="#00C853"/>
+                                            <Setter Property="StrokeThickness" Value="2.5"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                    <Setter Property="Fill" Value="#26EF4444"/>
+                                                    <Setter Property="Stroke" Value="#EF4444"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="38"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="&#xEA18;"/>
+                                            <Setter Property="Foreground" Value="#00C853"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
+                            <!-- Status text -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock FontSize="22" FontWeight="Bold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Você está protegido"/>
+                                            <Setter Property="Foreground" Value="#00C853"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                    <Setter Property="Text" Value="Proteção inativa"/>
+                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Foreground="#64748B" FontSize="12" Margin="0,6,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Monitoramento em tempo real ativo"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                    <Setter Property="Text" Value="Ative o monitoramento para proteção contínua"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Foreground="#64748B" FontSize="11" Margin="0,4,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value=""/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding LastScanTime}" Value="{x:Null}">
+                                                    <Setter Property="Text" Value="Nenhum scan realizado ainda"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Foreground="#64748B" FontSize="11" Margin="0,4,0,0"
+                                           Text="{Binding LastScanTime, StringFormat='Último scan: {0:dd/MM/yyyy HH:mm}', TargetNullValue=''}"/>
+                            </StackPanel>
+
+                            <!-- Quick action -->
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <Button Content="Scan Rápido" Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding QuickScanCommand}"
+                                        IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"
+                                        Padding="20,10" FontSize="13"/>
+                                <Button Content="{Binding IsMonitoring, Converter={StaticResource MonitorButtonConverter}}"
+                                        Margin="0,8,0,0" Padding="20,8" FontSize="12"
+                                        Command="{Binding ToggleMonitorCommand}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                            <Setter Property="Background" Value="#1E293B"/>
+                                            <Setter Property="Foreground" Value="#94A3B8"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                                    <Setter Property="Background" Value="#26EF4444"/>
+                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- ── Metric cards ── -->
+                    <UniformGrid Grid.Row="2" Rows="1" Columns="3">
+                        <Border Style="{StaticResource StatCard}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="AMEAÇAS BLOQUEADAS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="32" FontWeight="Bold"
+                                           Foreground="{StaticResource Danger}"
+                                           Text="{Binding TotalThreatsBlocked}"/>
+                                <TextBlock Text="Desde o início" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCard}" Margin="5,0,5,0">
+                            <StackPanel>
+                                <TextBlock Text="ASSINATURAS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="32" FontWeight="Bold"
+                                           Foreground="{StaticResource Accent}"
+                                           Text="{Binding SignatureCount, StringFormat=\{0:N0\}}"/>
+                                <TextBlock Text="Base MalwareBazaar" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCard}" Margin="10,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="CLAUDE AI" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="18" FontWeight="Bold" Margin="0,6,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Configurada"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsApiKeySet}" Value="False">
+                                                    <Setter Property="Text" Value="Não configurada"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="Análise por IA" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- ── Scan progress (shown during scan) ── -->
+                    <Border Grid.Row="4" Style="{StaticResource ContentCard}"
+                            Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{StaticResource Fg}"
+                                               Text="{Binding ScanStatus}"/>
+                                    <TextBlock Foreground="{StaticResource Accent}" FontSize="13"
+                                               Margin="8,0,0,0"
+                                               Text="{Binding ScannedCount, StringFormat='({0:N0} arquivos)'}"/>
+                                </StackPanel>
+                                <ProgressBar IsIndeterminate="True" Height="4"/>
+                                <TextBlock Foreground="{StaticResource FgMuted}" FontSize="11"
+                                           Margin="0,6,0,0" TextTrimming="CharacterEllipsis"
+                                           Text="{Binding CurrentScanFile}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="Cancelar" Margin="16,0,0,0"
+                                    Command="{Binding CancelScanCommand}"
+                                    Foreground="{StaticResource Danger}"
+                                    Background="#26EF4444" BorderThickness="0"
+                                    Padding="14,8" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
                 </Grid>
             </TabItem>
 
-            <!-- ===================== ABA 2: PROTEÇÃO EM TEMPO REAL ===================== -->
-            <TabItem Header="🛡️ Proteção em Tempo Real">
-                <Grid Margin="8">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- Toggle + path -->
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-                        <Button Command="{Binding ToggleMonitorCommand}" Width="180">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                    <Setter Property="Content" Value="▶ Iniciar Monitoramento"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
-                                            <Setter Property="Content" Value="⏹ Parar Monitoramento"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <Ellipse Width="12" Height="12" Margin="8,0" VerticalAlignment="Center">
-                            <Ellipse.Style>
-                                <Style TargetType="Ellipse">
-                                    <Setter Property="Fill" Value="Gray"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
-                                            <Setter Property="Fill" Value="LimeGreen"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Ellipse.Style>
-                        </Ellipse>
-                        <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="Pasta monitorada:"/>
-                        <TextBox Width="300" Text="{Binding MonitoredPath}" VerticalAlignment="Center"/>
+            <!-- ════════════════════════════════════════
+                 ABA 1: ESCANEAR
+                 Segoe MDL2: E721 = Search
+            ════════════════════════════════════════ -->
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Escanear" VerticalAlignment="Center"/>
                     </StackPanel>
+                </TabItem.Header>
 
-                    <Separator Grid.Row="1" Margin="0,4"/>
-
-                    <!-- Log -->
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                        <TextBox Text="{Binding MonitorLog}"
-                                 IsReadOnly="True"
-                                 TextWrapping="Wrap"
-                                 VerticalAlignment="Stretch"
-                                 Background="#1E1E1E"
-                                 Foreground="#D4D4D4"
-                                 FontFamily="Consolas"
-                                 FontSize="12"
-                                 BorderThickness="0"/>
-                    </ScrollViewer>
-                </Grid>
-            </TabItem>
-
-            <!-- ===================== ABA 3: QUARENTENA ===================== -->
-            <TabItem Header="🔒 Quarentena">
-                <Grid Margin="8">
+                <Grid Margin="28,24,28,24">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Arquivos isolados:" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                    <!-- Page header row -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource SectionHeader}"
+                                   Margin="0" Text="Escanear"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <!-- Scanning progress indicator -->
+                            <StackPanel Orientation="Horizontal"
+                                        Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibilityConverter}}"
+                                        Margin="0,0,12,0" VerticalAlignment="Center">
+                                <ProgressBar IsIndeterminate="True" Width="100" Height="4"
+                                             Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Style="{StaticResource MutedText}" VerticalAlignment="Center"
+                                           Text="{Binding ScannedCount, StringFormat='{}{0:N0} arquivos…'}"/>
+                                <TextBlock Style="{StaticResource MutedText}" VerticalAlignment="Center"
+                                           Margin="6,0,0,0" TextTrimming="CharacterEllipsis" MaxWidth="160"
+                                           Text="{Binding CurrentScanFile}"/>
+                                <Button Content="✕" Margin="10,0,0,0" Padding="6,2"
+                                        FontSize="10" VerticalAlignment="Center"
+                                        Command="{Binding CancelScanCommand}"
+                                        Foreground="{StaticResource Danger}"
+                                        Background="#26EF4444" BorderThickness="0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
 
-                    <DataGrid Grid.Row="1"
-                              ItemsSource="{Binding QuarantineEntries}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              AlternatingRowBackground="#FFF3F3"
-                              GridLinesVisibility="Horizontal">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Arquivo Original" Width="*"
-                                               Binding="{Binding OriginalPath}"/>
-                            <DataGridTextColumn Header="Quarentenado em" Width="150"
-                                               Binding="{Binding QuarantinedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
-                            <DataGridTextColumn Header="Hash" Width="250"
-                                               Binding="{Binding Hash}"/>
-                            <DataGridTemplateColumn Header="Ações" Width="180">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
+                    <!-- Stat cards -->
+                    <UniformGrid Grid.Row="2" Rows="1" Columns="3" >
+                        <Border Style="{StaticResource StatCard}" Margin="0,0,10,0">
+                            <StackPanel>
+                                <TextBlock Text="ASSINATURAS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="26" FontWeight="Bold"
+                                           Foreground="{StaticResource Accent}"
+                                           Text="{Binding SignatureCount, StringFormat=\{0:N0\}}"/>
+                                <TextBlock Text="Base MalwareBazaar" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCard}" Margin="5,0,5,0">
+                            <StackPanel>
+                                <TextBlock Text="LIMPOS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="26" FontWeight="Bold"
+                                           Foreground="{StaticResource Safe}"
+                                           Text="{Binding CleanCount, FallbackValue=0}"/>
+                                <TextBlock Text="Último scan" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource StatCard}" Margin="10,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="AMEAÇAS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="26" FontWeight="Bold"
+                                           Foreground="{StaticResource Danger}"
+                                           Text="{Binding ThreatCount, FallbackValue=0}"/>
+                                <TextBlock Text="Detectadas" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- Scan mode card -->
+                    <Border Grid.Row="4" Style="{StaticResource ContentCard}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource SubHeader}" Text="Iniciar Scan" Margin="0,0,0,16"/>
+                            <UniformGrid Rows="1" Columns="3">
+
+                                <!-- Quick Scan -->
+                                <Border Margin="0,0,8,0" Background="{StaticResource Surface2}"
+                                        CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                                        Padding="16,14">
+                                    <StackPanel>
+                                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="22" Foreground="{StaticResource Accent}" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Scan Rápido" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource Fg}" FontSize="13" Margin="0,0,0,4"/>
+                                        <TextBlock TextWrapping="Wrap" Style="{StaticResource MutedText}" FontSize="11"
+                                                   Text="Verifica pastas de alto risco: Temp, Downloads, Inicialização" Margin="0,0,0,12"/>
+                                        <Button Content="Iniciar Scan Rápido"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding QuickScanCommand}"
+                                                IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Full Scan -->
+                                <Border Margin="4,0,4,0" Background="{StaticResource Surface2}"
+                                        CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                                        Padding="16,14">
+                                    <StackPanel>
+                                        <TextBlock Text="&#xEA18;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="22" Foreground="{StaticResource Warn}" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Scan Completo" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource Fg}" FontSize="13" Margin="0,0,0,4"/>
+                                        <TextBlock TextWrapping="Wrap" Style="{StaticResource MutedText}" FontSize="11"
+                                                   Text="Varre todos os discos fixos. Pode levar vários minutos." Margin="0,0,0,12"/>
+                                        <Button Content="Iniciar Scan Completo"
+                                                Command="{Binding FullScanCommand}"
+                                                IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Custom Scan -->
+                                <Border Margin="8,0,0,0" Background="{StaticResource Surface2}"
+                                        CornerRadius="8" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                                        Padding="16,14">
+                                    <StackPanel>
+                                        <TextBlock Text="&#xED25;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="22" Foreground="{StaticResource FgMuted}" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Scan Personalizado" FontWeight="SemiBold"
+                                                   Foreground="{StaticResource Fg}" FontSize="13" Margin="0,0,0,4"/>
+                                        <TextBlock TextWrapping="Wrap" Style="{StaticResource MutedText}" FontSize="11"
+                                                   Text="Escolha um arquivo ou pasta específica para verificar." Margin="0,0,0,12"/>
                                         <StackPanel Orientation="Horizontal">
-                                            <Button Content="Restaurar"
-                                                    Command="{Binding DataContext.RestoreEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}"
-                                                    Padding="4,2" Margin="2"/>
-                                            <Button Content="Deletar"
-                                                    Command="{Binding DataContext.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                    CommandParameter="{Binding}"
-                                                    Padding="4,2" Margin="2"
-                                                    Foreground="White" Background="Crimson"/>
+                                            <Button Content="Arquivo" Margin="0,0,6,0"
+                                                    Command="{Binding ScanFileCommand}"
+                                                    IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
+                                            <Button Content="Pasta"
+                                                    Command="{Binding ScanFolderCommand}"
+                                                    IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
                                         </StackPanel>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
+                                    </StackPanel>
+                                </Border>
+
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Results DataGrid -->
+                    <Border Grid.Row="6" Style="{StaticResource ContentCard}" Padding="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Padding="20,14,20,14"
+                                    BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
+                                <TextBlock Style="{StaticResource SubHeader}" Margin="0" Text="Resultados"/>
+                            </Border>
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding ScanResults}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Nível" Width="90"
+                                                       Binding="{Binding Level}"/>
+                                    <DataGridTextColumn Header="Arquivo" Width="*"
+                                                       Binding="{Binding FilePath}"/>
+                                    <DataGridTextColumn Header="Hash SHA-256" Width="240"
+                                                       Binding="{Binding Hash}"/>
+                                    <DataGridTextColumn Header="Data" Width="140"
+                                                       Binding="{Binding ScannedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
+                                    <DataGridTemplateColumn Header="Ação" Width="110">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Quarentenar"
+                                                        Command="{Binding DataContext.QuarantineResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="8,4" Margin="4,6"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
                 </Grid>
             </TabItem>
 
-            <!-- ===================== ABA 4: CONFIGURAÇÕES ===================== -->
-            <TabItem Header="⚙️ Configurações">
-                <ScrollViewer Margin="16">
-                    <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+            <!-- ════════════════════════════════════════
+                 ABA 2: PROTEÇÃO EM TEMPO REAL
+                 Segoe MDL2: EA18 = ShieldSolid
+            ════════════════════════════════════════ -->
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xEA18;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Proteção" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
 
-                        <TextBlock Text="Claude AI" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                <Grid Margin="28,24,28,24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                        <Label Content="API Key do Claude:"/>
-                        <TextBox Text="{Binding ClaudeApiKey, UpdateSourceTrigger=PropertyChanged}"
-                                 MaxLength="200"/>
-                        <TextBlock Text="Obtenha em: console.anthropic.com"
-                                   Foreground="Gray" FontSize="11" Margin="2,2,0,12"/>
+                    <TextBlock Grid.Row="0" Style="{StaticResource SectionHeader}" Text="Proteção em Tempo Real"/>
 
-                        <Separator Margin="0,8"/>
+                    <!-- Control card -->
+                    <Border Grid.Row="2" Style="{StaticResource ContentCard}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="14"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                        <TextBlock Text="Banco de Assinaturas" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <!-- Toggle row -->
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Margin="0,0,0,2">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource SubHeader}">
+                                                <Setter Property="Text" Value="Monitoramento desativado"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                                        <Setter Property="Text" Value="Monitoramento ativo"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource MutedText}"
+                                               Text="Detecta ameaças em novos arquivos automaticamente"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding ToggleMonitorCommand}"
+                                        VerticalAlignment="Center">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                                            <Setter Property="Content" Value="Iniciar"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                                    <Setter Property="Content" Value="Parar"/>
+                                                    <Setter Property="Background" Value="#26EF4444"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <TextBlock Text="Assinaturas carregadas: " VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding SignatureCount, StringFormat=\{0:N0\}}"
-                                       FontWeight="Bold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                            <Separator Grid.Row="1" Margin="0,7"/>
 
-                        <StackPanel Orientation="Horizontal">
-                            <Button Content="⬇ Atualizar Assinaturas (MalwareBazaar)"
-                                    Command="{Binding UpdateSignaturesCommand}"
-                                    IsEnabled="{Binding IsUpdatingSignatures, Converter={StaticResource InverseBoolConverter}}"/>
-                            <ProgressBar IsIndeterminate="True" Width="120" Height="20" Margin="8,0"
-                                         Visibility="{Binding IsUpdatingSignatures, Converter={StaticResource BoolToVisibilityConverter}}"/>
-                        </StackPanel>
+                            <!-- Path row -->
+                            <Grid Grid.Row="2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}"
+                                           Text="PASTA MONITORADA" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="2" Text="{Binding MonitoredPath, UpdateSourceTrigger=PropertyChanged}"
+                                         VerticalContentAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
 
-                        <Separator Margin="0,16"/>
+                    <!-- Monitor log -->
+                    <Border Grid.Row="4" Style="{StaticResource ContentCard}" Padding="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Padding="20,14,20,14"
+                                    BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
+                                <TextBlock Style="{StaticResource SubHeader}" Margin="0" Text="Log de atividade"/>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <TextBox Text="{Binding MonitorLog}"
+                                         IsReadOnly="True"
+                                         TextWrapping="Wrap"
+                                         Background="#0A000000"
+                                         Foreground="{StaticResource Fg}"
+                                         FontFamily="Cascadia Code, Consolas, monospace"
+                                         FontSize="12"
+                                         BorderThickness="0"
+                                         Padding="16"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
 
-                        <TextBlock Text="Sistema" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+            <!-- ════════════════════════════════════════
+                 ABA 3: QUARENTENA
+                 Segoe MDL2: EF3C = Archive (Lock variant)
+            ════════════════════════════════════════ -->
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xEF3C;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Quarentena" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
 
-                        <CheckBox Content="Iniciar com o Windows"
-                                  IsChecked="{Binding StartWithWindows}"
-                                  Margin="0,0,0,8"/>
+                <Grid Margin="28,24,28,24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                        <Separator Margin="0,8"/>
+                    <TextBlock Grid.Row="0" Style="{StaticResource SectionHeader}" Text="Quarentena"/>
 
-                        <TextBlock Text="Scan Agendado" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+                    <Border Grid.Row="2" Style="{StaticResource ContentCard}" Padding="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Border Grid.Row="0" Padding="20,14,20,14"
+                                    BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
+                                <TextBlock Style="{StaticResource SubHeader}" Margin="0" Text="Arquivos isolados"/>
+                            </Border>
+                            <DataGrid Grid.Row="1"
+                                      ItemsSource="{Binding QuarantineEntries}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      CanUserAddRows="False">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Arquivo Original" Width="*"
+                                                       Binding="{Binding OriginalPath}"/>
+                                    <DataGridTextColumn Header="Data" Width="140"
+                                                       Binding="{Binding QuarantinedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
+                                    <DataGridTextColumn Header="Hash" Width="200"
+                                                       Binding="{Binding Hash}"/>
+                                    <DataGridTemplateColumn Header="Ações" Width="180">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="Restaurar"
+                                                            Command="{Binding DataContext.RestoreEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Padding="8,4" Margin="4,6,2,6"/>
+                                                    <Button Content="Excluir"
+                                                            Style="{StaticResource DangerButton}"
+                                                            Command="{Binding DataContext.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Padding="8,4" Margin="2,6,4,6"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
 
-                        <CheckBox Content="Scan diário automático"
-                                  IsChecked="{Binding IsScheduledScanRunning}"
-                                  Margin="0,0,0,4"
-                                  IsEnabled="False"/>
+            <!-- ════════════════════════════════════════
+                 ABA 4: HISTÓRICO
+                 Segoe MDL2: E81C = History
+            ════════════════════════════════════════ -->
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Histórico" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <TextBlock Text="Pasta:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox Width="300" Text="{Binding ScheduledScanPath}" VerticalAlignment="Center"/>
-                        </StackPanel>
+                <Grid Margin="28,24,28,24">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="16"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                        <Button Command="{Binding ToggleScheduledScanCommand}" HorizontalAlignment="Left" Margin="0,4,0,0">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                    <Setter Property="Content" Value="▶ Iniciar Scan Agendado"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsScheduledScanRunning}" Value="True">
-                                            <Setter Property="Content" Value="⏹ Parar Scan Agendado"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource SectionHeader}"
+                                   Margin="0" Text="Histórico de Scans"/>
+                        <Button Grid.Column="1" Content="Atualizar"
+                                Command="{Binding LoadHistoryCommand}"
+                                VerticalAlignment="Center"/>
+                    </Grid>
 
-                        <Separator Margin="0,16"/>
+                    <TextBlock Grid.Row="2" Style="{StaticResource MutedText}"
+                               Text="Últimos 100 scans registrados no banco de dados"/>
 
-                        <Button Content="💾 Salvar Configurações"
+                    <Border Grid.Row="4" Style="{StaticResource ContentCard}" Padding="0">
+                        <DataGrid ItemsSource="{Binding HistoryResults}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Nível" Width="90"
+                                                   Binding="{Binding Level}"/>
+                                <DataGridTextColumn Header="Arquivo" Width="*"
+                                                   Binding="{Binding FilePath}"/>
+                                <DataGridTextColumn Header="Hash SHA-256" Width="240"
+                                                   Binding="{Binding Hash}"/>
+                                <DataGridTextColumn Header="Data" Width="150"
+                                                   Binding="{Binding ScannedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ════════════════════════════════════════
+                 ABA 5: CONFIGURAÇÕES
+                 Segoe MDL2: E713 = Settings
+            ════════════════════════════════════════ -->
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Configurações" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="28,24,28,24" MaxWidth="600" HorizontalAlignment="Left">
+
+                        <TextBlock Style="{StaticResource SectionHeader}" Text="Configurações"/>
+
+                        <!-- Claude AI section -->
+                        <Border Style="{StaticResource ContentCard}" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SubHeader}" Text="Claude AI"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,16"
+                                           Text="Análise inteligente de arquivos suspeitos sem hash conhecido."/>
+
+                                <!-- API key status row -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="14" Margin="0,0,8,0" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsApiKeySet}" Value="True">
+                                                            <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Não configurada"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource FgMuted}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsApiKeySet}" Value="True">
+                                                            <Setter Property="Text" Value="Configurada"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Alterar Chave"
+                                            x:Name="ToggleApiKeyBtn"
+                                            Click="ToggleApiKeyPanel_Click"
+                                            Style="{StaticResource GhostButton}" FontSize="12"/>
+                                </Grid>
+
+                                <!-- Hidden input panel -->
+                                <StackPanel x:Name="ApiKeyPanel" Visibility="Collapsed">
+                                    <PasswordBox x:Name="ApiKeyBox" MaxLength="200"
+                                                 PasswordChanged="ApiKeyBox_PasswordChanged"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <Button Content="Salvar" Style="{StaticResource PrimaryButton}"
+                                                Click="SaveApiKey_Click" Margin="0,0,8,0"/>
+                                        <Button Content="Cancelar" Click="CancelApiKey_Click"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,6,0,0"
+                                           Text="Opcional — o restante do antivírus funciona sem ela."/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Signatures section -->
+                        <Border Style="{StaticResource ContentCard}" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SubHeader}" Text="Banco de Assinaturas"/>
+
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Style="{StaticResource FieldLabel}" Text="ASSINATURAS CARREGADAS"/>
+                                        <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                                   FontSize="22" FontWeight="Bold"
+                                                   Foreground="{StaticResource Accent}"
+                                                   Text="{Binding SignatureCount, StringFormat=\{0:N0\}}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <Button Content="Atualizar Agora"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding UpdateSignaturesCommand}"
+                                                IsEnabled="{Binding IsUpdatingSignatures, Converter={StaticResource InverseBoolConverter}}"/>
+                                        <ProgressBar IsIndeterminate="True" Width="120" Height="4" Margin="0,8,0,0"
+                                                     Visibility="{Binding IsUpdatingSignatures, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Style="{StaticResource MutedText}"
+                                           Text="Fonte: MalwareBazaar — atualização automática a cada 24h"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- System section -->
+                        <Border Style="{StaticResource ContentCard}" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource SubHeader}" Text="Sistema"/>
+
+                                <CheckBox Content="Iniciar com o Windows" Margin="0,0,0,16"
+                                          IsChecked="{Binding StartWithWindows}"/>
+
+                                <Separator Margin="0,0,0,16"/>
+
+                                <TextBlock Style="{StaticResource SubHeader}" Text="Scan Agendado" Margin="0,0,0,8"/>
+
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource FieldLabel}"
+                                               Text="PASTA" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="2" Text="{Binding ScheduledScanPath, UpdateSourceTrigger=PropertyChanged}"
+                                             VerticalContentAlignment="Center"/>
+                                </Grid>
+
+                                <Button Command="{Binding ToggleScheduledScanCommand}"
+                                        HorizontalAlignment="Left">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                            <Setter Property="Content" Value="Iniciar Scan Agendado"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsScheduledScanRunning}" Value="True">
+                                                    <Setter Property="Content" Value="Parar Scan Agendado"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Save -->
+                        <Button Content="Salvar Configurações"
+                                Style="{StaticResource PrimaryButton}"
                                 Command="{Binding SaveApiKeyCommand}"
                                 HorizontalAlignment="Left"/>
+
+                        <!-- ── DARK WEB MONITOR ── -->
+                        <TextBlock Style="{StaticResource SectionHeader}"
+                                   Text="Monitoramento Dark Web" Margin="0,32,0,8"/>
+
+                        <Border Background="{StaticResource Surface}" CornerRadius="10"
+                                Padding="20,16" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Verifique se seu e-mail apareceu em vazamentos de dados (HaveIBeenPwned)."
+                                           Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding DarkWebEmail, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="#0D1117" Foreground="#E2E8F0"
+                                             BorderBrush="#30415A" BorderThickness="1"
+                                             Padding="10,8" FontSize="13"
+                                             Margin="0,0,8,0"/>
+                                    <Button Grid.Column="1"
+                                            Content="Verificar"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding CheckDarkWebCommand}"
+                                            IsEnabled="{Binding IsDarkWebChecking, Converter={StaticResource InverseBoolConverter}}"/>
+                                </Grid>
+
+                                <!-- Status -->
+                                <TextBlock Text="{Binding DarkWebStatus}"
+                                           FontSize="12" TextWrapping="Wrap"
+                                           Foreground="#94A3B8"/>
+
+                                <!-- Breaches list -->
+                                <ItemsControl ItemsSource="{Binding DarkWebBreaches}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#1A0D0D" BorderBrush="#40EF4444"
+                                                    BorderThickness="1" CornerRadius="8"
+                                                    Padding="14,10" Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Title}"
+                                                                   FontWeight="SemiBold" Foreground="#F87171" FontSize="13"/>
+                                                        <TextBlock Text="{Binding BreachDate, StringFormat='Vazamento: {0}'}"
+                                                                   Foreground="#94A3B8" FontSize="11"/>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{Binding PwnCount, StringFormat='{}{0:N0} contas'}"
+                                                               Foreground="#EF4444" FontSize="11"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ── DNS BLOCKING ── -->
+                        <TextBlock Style="{StaticResource SectionHeader}"
+                                   Text="Bloqueio de DNS" Margin="0,32,0,8"/>
+
+                        <Border Background="{StaticResource Surface}" CornerRadius="10"
+                                Padding="20,16" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Bloqueia domínios maliciosos conhecidos via arquivo hosts do Windows. Requer privilégios de administrador."
+                                           Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <!-- Admin warning -->
+                                <Border CornerRadius="6" Padding="12,8" Margin="0,0,0,10"
+                                        Background="#1A1200">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAdmin}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="⚠ Execute o AVDON como Administrador para usar esta funcionalidade."
+                                               Foreground="#FBBF24" FontSize="12" TextWrapping="Wrap"/>
+                                </Border>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Ativar Bloqueio DNS"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding EnableDnsBlockingCommand}"
+                                            IsEnabled="{Binding IsDnsBlocking, Converter={StaticResource InverseBoolConverter}}"
+                                            Margin="0,0,8,0"/>
+                                    <Button Content="Desativar"
+                                            Command="{Binding DisableDnsBlockingCommand}"
+                                            IsEnabled="{Binding IsDnsBlocking, Converter={StaticResource InverseBoolConverter}}"
+                                            Padding="12,8" Background="#1E293B" Foreground="#94A3B8"
+                                            BorderThickness="0" Cursor="Hand">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="bg" Background="{TemplateBinding Background}"
+                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="bg" Property="Background" Value="#334155"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding DnsBlockStatus}"
+                                           Foreground="#94A3B8" FontSize="12" Margin="0,10,0,0"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
-            </TabItem>
-
-            <!-- ===================== ABA 5: HISTÓRICO ===================== -->
-            <TabItem Header="📋 Histórico">
-                <Grid Margin="8">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-                        <Button Content="🔄 Carregar Histórico"
-                                Command="{Binding LoadHistoryCommand}"/>
-                        <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"
-                                   Text="Últimos 100 scans registrados"/>
-                    </StackPanel>
-
-                    <DataGrid Grid.Row="1"
-                              ItemsSource="{Binding HistoryResults}"
-                              AutoGenerateColumns="False"
-                              IsReadOnly="True"
-                              CanUserAddRows="False"
-                              AlternatingRowBackground="#F0F8FF"
-                              GridLinesVisibility="Horizontal">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Nível" Width="90"
-                                               Binding="{Binding Level}"/>
-                            <DataGridTextColumn Header="Arquivo" Width="*"
-                                               Binding="{Binding FilePath}"/>
-                            <DataGridTextColumn Header="Hash (SHA-256)" Width="260"
-                                               Binding="{Binding Hash}"/>
-                            <DataGridTextColumn Header="Data" Width="150"
-                                               Binding="{Binding ScannedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
             </TabItem>
 
         </TabControl>

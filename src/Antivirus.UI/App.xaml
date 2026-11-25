@@ -4,16 +4,13 @@
              xmlns:local="clr-namespace:Antivirus.UI"
              xmlns:conv="clr-namespace:Antivirus.UI.Converters">
     <Application.Resources>
-        <conv:InverseBoolConverter x:Key="InverseBoolConverter"/>
-        <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
-
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="4"/>
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="Padding" Value="4,3"/>
-            <Setter Property="Margin" Value="2"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/AvdonTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <conv:InverseBoolConverter x:Key="InverseBoolConverter"/>
+            <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+            <conv:MonitorButtonConverter x:Key="MonitorButtonConverter"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

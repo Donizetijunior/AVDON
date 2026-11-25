@@ -3,8 +3,12 @@ using System.IO;
 using System.Windows;
 using System.Windows.Forms;
 using AntivirusOS.Core.AI;
+using AntivirusOS.Core.Analysis;
+using AntivirusOS.Core.DarkWeb;
 using AntivirusOS.Core.Monitor;
+using AntivirusOS.Core.Network;
 using AntivirusOS.Core.Quarantine;
+using AntivirusOS.Core.Ransomware;
 using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Signatures;
 using AntivirusOS.Core.Updater;
@@ -40,6 +44,24 @@ public partial class App : WinApp
         var monitor = _serviceProvider.GetRequiredService<IRealTimeMonitor>();
         monitor.ThreatDetected += OnThreatDetected;
 
+        // Auto-protect critical folders on startup
+        var criticalPaths = new[]
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads"),
+            Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+            Environment.GetFolderPath(Environment.SpecialFolder.Startup),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                @"Microsoft\Windows\Start Menu\Programs\Startup"),
+        };
+        monitor.StartMonitoring(criticalPaths);
+        mainViewModel.IsMonitoring = true;
+        mainViewModel.MonitoredPath = "Pastas críticas";
+
+        // Start ransomware guard on critical folders
+        var ransomGuard = _serviceProvider.GetRequiredService<RansomwareGuard>();
+        ransomGuard.AlertRaised += OnRansomwareAlert;
+        ransomGuard.Start(criticalPaths);
+
         // Start auto-updater
         var autoUpdater = _serviceProvider.GetRequiredService<AutoUpdater>();
         _ = autoUpdater.StartAsync(_cts.Token);
@@ -51,7 +73,7 @@ public partial class App : WinApp
             {
                 args.Cancel = true;
                 mainWindow.Hide();
-                _notifyIcon!.ShowBalloonTip(2000, "AntivirusOS", "Minimizado para a bandeja. Clique duas vezes para restaurar.", ToolTipIcon.Info);
+                _notifyIcon!.ShowBalloonTip(2000, "AVDON", "Minimizado para a bandeja. Clique duas vezes para restaurar.", ToolTipIcon.Info);
             }
         };
 
@@ -100,7 +122,7 @@ public partial class App : WinApp
         return new NotifyIcon
         {
             Icon = icon,
-            Text = "AntivirusOS",
+            Text = "AVDON",
             Visible = true,
             ContextMenuStrip = menu
         };
@@ -109,17 +131,30 @@ public partial class App : WinApp
     private void OnThreatDetected(object? sender, FileDetectedEventArgs e)
     {
         var result = e.Result;
-        _notifyIcon?.ShowBalloonTip(5000,
-            "AntivirusOS — Ameaça Detectada!",
-            $"Arquivo: {result.FilePath}\nNível: {result.Level}",
-            ToolTipIcon.Warning);
+        Current.Dispatcher.Invoke(() =>
+        {
+            var toast = new ThreatToastWindow(result, _serviceProvider!.GetRequiredService<MainViewModel>());
+            toast.Show();
+        });
+    }
+
+    private void OnRansomwareAlert(object? sender, AntivirusOS.Core.Ransomware.RansomwareAlert alert)
+    {
+        Current.Dispatcher.Invoke(() =>
+        {
+            var msg = alert.Kind == AntivirusOS.Core.Ransomware.RansomwareAlertKind.HoneypotTriggered
+                ? $"⚠ Arquivo sentinela modificado!\n{alert.Path}"
+                : $"⚠ Possível ransomware detectado!\n{alert.FileCount} arquivos modificados em {alert.Path}";
+
+            _notifyIcon?.ShowBalloonTip(5000, "AVDON — Alerta de Ransomware", msg, ToolTipIcon.Warning);
+        });
     }
 
     private static void ConfigureServices(IServiceCollection services)
     {
         var appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "AntivirusOS");
+            "AVDON");
         Directory.CreateDirectory(appDataPath);
 
         var dbPath = Path.Combine(appDataPath, "signatures.db");
@@ -130,12 +165,28 @@ public partial class App : WinApp
             new SignatureDatabase($"Data Source={dbPath}"));
 
         services.AddSingleton<IHashAnalyzer, HashAnalyzer>();
-        services.AddSingleton<IFileScanner, FileScanner>();
-        services.AddSingleton<IQuarantineManager>(_ => new QuarantineManager(quarantinePath));
-        services.AddSingleton<IRealTimeMonitor, RealTimeMonitor>();
-
         services.AddSingleton<IClaudeAnalyzer>(_ =>
             new ClaudeAnalyzer(UISettings.Default.ClaudeApiKey ?? string.Empty));
+
+        // YARA — load builtin rules
+        services.AddSingleton<IYaraScanner>(_ =>
+        {
+            var scanner = new YaraScanner();
+            var rulesDir = BuiltinYaraRules.EnsureRules(appDataPath);
+            scanner.LoadRules(rulesDir);
+            return scanner;
+        });
+
+        services.AddSingleton<IFileScanner>(sp =>
+            new FileScanner(
+                sp.GetRequiredService<IHashAnalyzer>(),
+                sp.GetRequiredService<ISignatureDatabase>(),
+                yaraScanner: sp.GetRequiredService<IYaraScanner>(),
+                claudeAnalyzer: sp.GetRequiredService<IClaudeAnalyzer>()));
+
+        services.AddSingleton<RansomwareGuard>();
+        services.AddSingleton<IQuarantineManager>(_ => new QuarantineManager(quarantinePath));
+        services.AddSingleton<IRealTimeMonitor, RealTimeMonitor>();
 
         services.AddSingleton<ISignatureUpdater>(sp =>
             new SignatureUpdater(new System.Net.Http.HttpClient(), sp.GetRequiredService<ISignatureDatabase>()));
@@ -147,11 +198,14 @@ public partial class App : WinApp
             new ScanHistory($"Data Source={historyDbPath}"));
 
         services.AddSingleton<ScheduledScanner>();
+        services.AddSingleton<DarkWebMonitor>();
+        services.AddSingleton<DnsBlocker>();
         services.AddSingleton<MainViewModel>();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _serviceProvider?.GetService<RansomwareGuard>()?.Dispose();
         _notifyIcon?.Dispose();
         _cts.Cancel();
         _cts.Dispose();
