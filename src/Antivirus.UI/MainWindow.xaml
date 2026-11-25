@@ -1896,7 +1896,152 @@
                 </Grid>
             </TabItem>
 
-            <!-- Aba 9: Inicialização -->
+            <!-- Aba 9: Integridade -->
+            <TabItem Header="INTEGRIDADE">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Monitor de Integridade de Arquivos" FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Fg}"/>
+                            <TextBlock Text="Detecta modificações em arquivos críticos do sistema Windows"
+                                       FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="📷 Criar Snapshot"
+                                    Command="{Binding TakeIntegritySnapshotCommand}"
+                                    IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBool}}"
+                                    Background="#1E293B" Foreground="#94A3B8"
+                                    BorderThickness="1" BorderBrush="#334155"
+                                    Padding="12,8" FontSize="12" Cursor="Hand" Margin="0,0,8,0"/>
+                            <Button Content="🔍 Verificar Integridade"
+                                    Command="{Binding VerifyIntegrityCommand}"
+                                    IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBool}}"
+                                    Background="#1E293B" Foreground="{StaticResource Accent}"
+                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
+                                    Padding="12,8" FontSize="12" Cursor="Hand"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Summary bar -->
+                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="TOTAL" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding IntegrityResults.Count}" FontSize="20"
+                                           Foreground="{StaticResource Fg}" FontWeight="Bold" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="MODIFICADOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding IntegrityModifiedCount}" FontSize="20"
+                                           FontWeight="Bold" Margin="0,2,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#34D399"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IntegrityModifiedCount}" Value="0">
+                                                    <Setter Property="Foreground" Value="#34D399"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="AUSENTES" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding IntegrityMissingCount}" FontSize="20"
+                                           FontWeight="Bold" Foreground="#FCA5A5" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3">
+                                <TextBlock Text="STATUS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding IntegrityStatus}" FontSize="11"
+                                           Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Results DataGrid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding IntegrityResults}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Background="#0A0F1A"
+                              RowBackground="#0A0F1A"
+                              AlternatingRowBackground="#0D1420"
+                              BorderThickness="0"
+                              GridLinesVisibility="None"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              CanUserReorderColumns="False"
+                              CanUserResizeRows="False">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Status}" Value="Modified">
+                                        <Setter Property="Foreground" Value="#FCA5A5"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="Missing">
+                                        <Setter Property="Foreground" Value="#F87171"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="New">
+                                        <Setter Property="Foreground" Value="#FCD34D"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Status}" Value="OK">
+                                        <Setter Property="Foreground" Value="#34D399"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="STATUS"       Binding="{Binding Status}"        Width="90"/>
+                            <DataGridTextColumn Header="ARQUIVO"      Binding="{Binding FilePath}"      Width="*"/>
+                            <DataGridTextColumn Header="HASH ESPERADO" Binding="{Binding ExpectedHash}" Width="130"/>
+                            <DataGridTextColumn Header="HASH ATUAL"   Binding="{Binding ActualHash}"    Width="130"/>
+                            <DataGridTextColumn Header="SNAPSHOT"
+                                                Binding="{Binding SnapshotTime, StringFormat='dd/MM HH:mm'}"
+                                                Width="100"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Spinner -->
+                    <TextBlock Grid.Row="3" Margin="0,8,0,0"
+                               Text="Verificando integridade…"
+                               Foreground="{StaticResource Accent}" FontSize="11"
+                               Visibility="{Binding IsCheckingIntegrity, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Aba 10: Inicialização -->
             <TabItem Header="INICIALIZAÇÃO">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>

@@ -18,6 +18,7 @@ using AntivirusOS.Core.Signatures;
 using AntivirusOS.Core.Updater;
 using AntivirusOS.Core.Events;
 using AntivirusOS.Core.Startup;
+using AntivirusOS.Core.Integrity;
 using Microsoft.Win32;
 using WinForms = System.Windows.Forms;
 using Win32Dialog = Microsoft.Win32;
@@ -42,6 +43,8 @@ public partial class MainViewModel : ObservableObject
     private readonly AntivirusOS.Core.Shell.ShellContextMenuService _shellMenu;
     private readonly EventLogger _eventLogger;
     private readonly StartupManager _startupManager = new();
+    private readonly FileIntegrityService _integrityService;
+    private CancellationTokenSource? _integrityCts;
     private ScheduledScanConfig _schedConfig = new();
     private AppSettings _appSettings = new();
     private readonly string _appDataPath;
@@ -286,6 +289,8 @@ public partial class MainViewModel : ObservableObject
         _eventLogger = eventLogger;
         _appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AVDON");
+        _integrityService = new FileIntegrityService(_appDataPath);
+        _hasIntegritySnapshot = _integrityService.HasSnapshot();
         _schedConfig = ScheduledScanConfig.Load(_appDataPath);
         _isScheduleEnabled = _schedConfig.Enabled;
         _scheduleIntervalHours = _schedConfig.IntervalHours;
@@ -897,6 +902,66 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ---- App Settings ----
+
+    // ---- File integrity ----
+    public ObservableCollection<IntegrityEntry> IntegrityResults { get; } = new();
+
+    [ObservableProperty] private bool   _isCheckingIntegrity;
+    [ObservableProperty] private string _integrityStatus  = "Nenhuma verificação executada ainda.";
+    [ObservableProperty] private bool   _hasIntegritySnapshot;
+    [ObservableProperty] private int    _integrityModifiedCount;
+    [ObservableProperty] private int    _integrityMissingCount;
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task TakeIntegritySnapshotAsync()
+    {
+        _integrityCts?.Cancel();
+        _integrityCts = new CancellationTokenSource();
+        IsCheckingIntegrity = true;
+        IntegrityStatus = "Calculando hashes — criando snapshot…";
+        try
+        {
+            var entries = await _integrityService.TakeSnapshotAsync(ct: _integrityCts.Token);
+            IntegrityResults.Clear();
+            foreach (var e in entries) IntegrityResults.Add(e);
+            HasIntegritySnapshot = true;
+            IntegrityStatus = $"Snapshot criado. {entries.Count} arquivo(s) registrado(s).";
+            _eventLogger.Log(AntivirusOS.Core.Events.EventKind.ScanCompleted,
+                $"Integrity snapshot: {entries.Count} arquivo(s)");
+        }
+        catch (OperationCanceledException) { IntegrityStatus = "Cancelado."; }
+        catch (Exception ex) { IntegrityStatus = $"Erro: {ex.Message}"; }
+        finally { IsCheckingIntegrity = false; }
+    }
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task VerifyIntegrityAsync()
+    {
+        _integrityCts?.Cancel();
+        _integrityCts = new CancellationTokenSource();
+        IsCheckingIntegrity = true;
+        IntegrityStatus = "Verificando integridade dos arquivos críticos…";
+        try
+        {
+            var entries = await _integrityService.VerifyAsync(ct: _integrityCts.Token);
+            IntegrityResults.Clear();
+            foreach (var e in entries) IntegrityResults.Add(e);
+            IntegrityModifiedCount = entries.Count(e => e.Status == AntivirusOS.Core.Integrity.IntegrityStatus.Modified);
+            IntegrityMissingCount  = entries.Count(e => e.Status == AntivirusOS.Core.Integrity.IntegrityStatus.Missing);
+            var ok = IntegrityModifiedCount + IntegrityMissingCount == 0;
+            IntegrityStatus = ok
+                ? $"✓ Todos os {entries.Count} arquivo(s) íntegros."
+                : $"⚠ {IntegrityModifiedCount} modificado(s), {IntegrityMissingCount} ausente(s) de {entries.Count}.";
+            if (!ok)
+                _eventLogger.Log(AntivirusOS.Core.Events.EventKind.ThreatDetected,
+                    IntegrityStatus, $"Modified:{IntegrityModifiedCount} Missing:{IntegrityMissingCount}");
+        }
+        catch (OperationCanceledException) { IntegrityStatus = "Cancelado."; }
+        catch (Exception ex) { IntegrityStatus = $"Erro: {ex.Message}"; }
+        finally { IsCheckingIntegrity = false; }
+    }
 
     // ---- Startup items ----
     public ObservableCollection<StartupItem> StartupItems { get; } = new();
