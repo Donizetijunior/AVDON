@@ -17,6 +17,7 @@ using AntivirusOS.Core.Monitor;
 using AntivirusOS.Core.Signatures;
 using AntivirusOS.Core.Updater;
 using AntivirusOS.Core.Events;
+using AntivirusOS.Core.Startup;
 using Microsoft.Win32;
 using WinForms = System.Windows.Forms;
 using Win32Dialog = Microsoft.Win32;
@@ -40,6 +41,7 @@ public partial class MainViewModel : ObservableObject
     private readonly ProcessMonitorService _processMonitor;
     private readonly AntivirusOS.Core.Shell.ShellContextMenuService _shellMenu;
     private readonly EventLogger _eventLogger;
+    private readonly StartupManager _startupManager = new();
     private ScheduledScanConfig _schedConfig = new();
     private AppSettings _appSettings = new();
     private readonly string _appDataPath;
@@ -891,6 +893,48 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ---- App Settings ----
+
+    // ---- Startup items ----
+    public ObservableCollection<StartupItem> StartupItems { get; } = new();
+
+    [ObservableProperty] private bool   _isLoadingStartup;
+    [ObservableProperty] private string _startupStatus = string.Empty;
+    [ObservableProperty] private int    _startupSuspiciousCount;
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task ScanStartupAsync()
+    {
+        IsLoadingStartup = true;
+        StartupStatus = "Enumerando itens de inicialização…";
+        try
+        {
+            var items = await Task.Run(() => _startupManager.Enumerate());
+            StartupItems.Clear();
+            foreach (var item in items)
+                StartupItems.Add(item);
+            StartupSuspiciousCount = items.Count(i => i.Level is StartupThreatLevel.Suspicious or StartupThreatLevel.Malicious);
+            StartupStatus = $"{items.Count} item(s) encontrado(s). {StartupSuspiciousCount} suspeito(s).";
+            _eventLogger.Log(AntivirusOS.Core.Events.EventKind.ScanStarted,
+                $"Inicialização: {items.Count} item(s), {StartupSuspiciousCount} suspeito(s)");
+        }
+        catch (Exception ex) { StartupStatus = $"Erro: {ex.Message}"; }
+        finally { IsLoadingStartup = false; }
+    }
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void DisableStartupItem(StartupItem? item)
+    {
+        if (item is null) return;
+        var (ok, msg) = _startupManager.Disable(item);
+        StartupStatus = msg;
+        if (ok)
+        {
+            StartupItems.Remove(item);
+            _eventLogger.Log(AntivirusOS.Core.Events.EventKind.ScanStarted, $"Startup desabilitado: {item.Name}");
+        }
+    }
 
     // ---- Event log helpers ----
 

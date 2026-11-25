@@ -1883,7 +1883,145 @@
                 </Grid>
             </TabItem>
 
-            <!-- Aba 9: Eventos -->
+            <!-- Aba 9: Inicialização -->
+            <TabItem Header="INICIALIZAÇÃO">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Programas de Inicialização" FontSize="16" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Fg}"/>
+                            <TextBlock Text="Itens que iniciam automaticamente com o Windows"
+                                       FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="🔍 Escanear Inicialização"
+                                Command="{Binding ScanStartupCommand}"
+                                IsEnabled="{Binding IsLoadingStartup, Converter={StaticResource InverseBool}}"
+                                Background="#1E293B" Foreground="{StaticResource Accent}"
+                                BorderThickness="1" BorderBrush="{StaticResource Accent}"
+                                Padding="14,8" FontSize="12" Cursor="Hand" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <!-- Summary bar -->
+                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="TOTAL" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding StartupItems.Count}" FontSize="20"
+                                           Foreground="{StaticResource Fg}" FontWeight="Bold" Margin="0,2,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="SUSPEITOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding StartupSuspiciousCount}" FontSize="20"
+                                           FontWeight="Bold" Margin="0,2,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding StartupSuspiciousCount}" Value="0">
+                                                    <Setter Property="Foreground" Value="#34D399"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="STATUS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding StartupStatus}" FontSize="11"
+                                           Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Startup items DataGrid -->
+                    <DataGrid Grid.Row="2"
+                              ItemsSource="{Binding StartupItems}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              Background="#0A0F1A"
+                              RowBackground="#0A0F1A"
+                              AlternatingRowBackground="#0D1420"
+                              BorderThickness="0"
+                              GridLinesVisibility="None"
+                              HeadersVisibility="Column"
+                              SelectionMode="Single"
+                              CanUserReorderColumns="False"
+                              CanUserResizeRows="False"
+                              x:Name="StartupGrid">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding" Value="8,6"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Level}" Value="Suspicious">
+                                        <Setter Property="Foreground" Value="#FCD34D"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="Malicious">
+                                        <Setter Property="Foreground" Value="#FCA5A5"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="NOME"       Binding="{Binding Name}"      Width="160"/>
+                            <DataGridTextColumn Header="NÍVEL"      Binding="{Binding Level}"     Width="90"/>
+                            <DataGridTextColumn Header="FONTE"      Binding="{Binding Source}"    Width="120"/>
+                            <DataGridTextColumn Header="PUBLISHER"  Binding="{Binding Publisher}" Width="140"/>
+                            <DataGridTextColumn Header="CAMINHO"    Binding="{Binding FilePath}"  Width="*"/>
+                            <DataGridTemplateColumn Header="AÇÃO" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Desabilitar"
+                                                Command="{Binding DataContext.DisableStartupItemCommand,
+                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Background="Transparent"
+                                                Foreground="#F87171"
+                                                BorderThickness="1" BorderBrush="#F87171"
+                                                Padding="6,2" FontSize="11" Cursor="Hand" Margin="4,2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Loading indicator -->
+                    <TextBlock Grid.Row="3" Margin="0,8,0,0"
+                               Text="Escaneando itens de inicialização…"
+                               Foreground="{StaticResource Accent}" FontSize="11"
+                               Visibility="{Binding IsLoadingStartup, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
+            </TabItem>
+
+            <!-- Aba 10: Eventos -->
             <TabItem Header="EVENTOS">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
