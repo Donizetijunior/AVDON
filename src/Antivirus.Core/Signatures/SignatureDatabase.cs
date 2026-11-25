@@ -3,6 +3,8 @@ using Microsoft.Data.Sqlite;
 
 namespace AntivirusOS.Core.Signatures;
 
+// AVISO: Esta classe usa uma única SqliteConnection e NÃO é thread-safe.
+// Não utilize instâncias compartilhadas entre múltiplas threads simultaneamente.
 public class SignatureDatabase : ISignatureDatabase, IDisposable
 {
     private readonly SqliteConnection _connection;
@@ -15,7 +17,7 @@ public class SignatureDatabase : ISignatureDatabase, IDisposable
 
     public async Task InitializeAsync()
     {
-        var cmd = _connection.CreateCommand();
+        using var cmd = _connection.CreateCommand();
         cmd.CommandText = """
             CREATE TABLE IF NOT EXISTS signatures (
                 hash TEXT PRIMARY KEY,
@@ -29,7 +31,7 @@ public class SignatureDatabase : ISignatureDatabase, IDisposable
 
     public async Task AddSignatureAsync(ThreatInfo threat)
     {
-        var cmd = _connection.CreateCommand();
+        using var cmd = _connection.CreateCommand();
         cmd.CommandText = "INSERT OR IGNORE INTO signatures (hash, name, level, description) VALUES ($hash, $name, $level, $description)";
         cmd.Parameters.AddWithValue("$hash", threat.Hash);
         cmd.Parameters.AddWithValue("$name", threat.Name);
@@ -40,7 +42,7 @@ public class SignatureDatabase : ISignatureDatabase, IDisposable
 
     public async Task<ThreatInfo?> LookupAsync(string sha256Hash)
     {
-        var cmd = _connection.CreateCommand();
+        using var cmd = _connection.CreateCommand();
         cmd.CommandText = "SELECT hash, name, level, description FROM signatures WHERE hash = $hash";
         cmd.Parameters.AddWithValue("$hash", sha256Hash);
         using var reader = await cmd.ExecuteReaderAsync();
@@ -56,7 +58,7 @@ public class SignatureDatabase : ISignatureDatabase, IDisposable
 
     public async Task<int> CountAsync()
     {
-        var cmd = _connection.CreateCommand();
+        using var cmd = _connection.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM signatures";
         var result = await cmd.ExecuteScalarAsync();
         return Convert.ToInt32(result);
@@ -65,5 +67,11 @@ public class SignatureDatabase : ISignatureDatabase, IDisposable
     public void Dispose()
     {
         _connection.Dispose();
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 }

@@ -2,7 +2,7 @@ using AntivirusOS.Core.Models;
 
 namespace AntivirusOS.Core.Signatures;
 
-public interface ISignatureDatabase
+public interface ISignatureDatabase : IAsyncDisposable
 {
     Task InitializeAsync();
     Task AddSignatureAsync(ThreatInfo threat);

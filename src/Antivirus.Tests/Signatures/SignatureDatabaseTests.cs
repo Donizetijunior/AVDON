@@ -8,7 +8,7 @@ public class SignatureDatabaseTests
     [Fact]
     public async Task Lookup_ExistingHash_ReturnsThreat()
     {
-        var db = new SignatureDatabase("Data Source=:memory:");
+        await using var db = new SignatureDatabase("Data Source=:memory:");
         await db.InitializeAsync();
         var threat = new ThreatInfo("deadbeef", "Trojan.Test", ThreatLevel.Malicious, "test");
         await db.AddSignatureAsync(threat);
@@ -20,7 +20,7 @@ public class SignatureDatabaseTests
     [Fact]
     public async Task Lookup_UnknownHash_ReturnsNull()
     {
-        var db = new SignatureDatabase("Data Source=:memory:");
+        await using var db = new SignatureDatabase("Data Source=:memory:");
         await db.InitializeAsync();
         var result = await db.LookupAsync("unknown");
         Assert.Null(result);
@@ -29,10 +29,20 @@ public class SignatureDatabaseTests
     [Fact]
     public async Task AddSignature_Duplicate_DoesNotThrow()
     {
-        var db = new SignatureDatabase("Data Source=:memory:");
+        await using var db = new SignatureDatabase("Data Source=:memory:");
         await db.InitializeAsync();
         var threat = new ThreatInfo("aabb", "Test", ThreatLevel.Suspicious, "");
         await db.AddSignatureAsync(threat);
         await db.AddSignatureAsync(threat); // INSERT OR IGNORE — sem exceção
+    }
+
+    [Fact]
+    public async Task Count_AfterAddingSignatures_ReturnsCorrectCount()
+    {
+        await using var db = new SignatureDatabase("Data Source=:memory:");
+        await db.InitializeAsync();
+        await db.AddSignatureAsync(new ThreatInfo("hash1", "T1", ThreatLevel.Malicious, ""));
+        await db.AddSignatureAsync(new ThreatInfo("hash2", "T2", ThreatLevel.Suspicious, ""));
+        Assert.Equal(2, await db.CountAsync());
     }
 }
