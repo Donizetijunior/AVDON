@@ -24,14 +24,15 @@ public class RealTimeMonitorTests
         Directory.CreateDirectory(tempDir);
         try
         {
-            FileDetectedEventArgs? detected = null;
-            monitor.ThreatDetected += (_, e) => detected = e;
+            var tcs = new TaskCompletionSource<FileDetectedEventArgs>();
+            monitor.ThreatDetected += (_, e) => tcs.TrySetResult(e);
             monitor.StartMonitoring(tempDir);
 
             await File.WriteAllTextAsync(Path.Combine(tempDir, "test.exe"), "data");
-            await Task.Delay(500);
+            var detected = await tcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
             Assert.NotNull(detected);
+            Assert.Equal(ThreatLevel.Malicious, detected.Result.Level);
         }
         finally
         {
