@@ -2439,6 +2439,171 @@
                 </Grid>
             </TabItem>
 
+            <!-- Aba 11: Varredura de Segurança -->
+            <TabItem Header="VARREDURA">
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- ── HOSTS FILE SECTION ── -->
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Verificador do Arquivo Hosts" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Fg}"/>
+                            <TextBlock Text="{Binding HostsStatus}" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#1E293B" CornerRadius="4" Padding="10,4" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="SUSPEITAS: " FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding HostsSuspiciousCount}" FontSize="11" FontWeight="Bold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#34D399"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HostsSuspiciousCount}" Value="0">
+                                                        <Setter Property="Foreground" Value="#34D399"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                            <Button Content="🔍 Verificar Hosts"
+                                    Command="{Binding CheckHostsCommand}"
+                                    IsEnabled="{Binding IsCheckingHosts, Converter={StaticResource InverseBool}}"
+                                    Background="#1E293B" Foreground="{StaticResource Accent}"
+                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
+                                    Padding="12,8" FontSize="12" Cursor="Hand"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding HostsEntries}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="#0F172A" Foreground="{StaticResource Fg}"
+                              GridLinesVisibility="Horizontal" RowBackground="#0F172A"
+                              AlternatingRowBackground="#1E293B" BorderThickness="1"
+                              BorderBrush="#1E293B" ColumnHeaderHeight="32" RowHeight="28"
+                              Margin="0,0,0,16" MaxHeight="210">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="FontSize"   Value="10"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding"    Value="8,0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Risk}" Value="Malicious">
+                                        <Setter Property="Foreground" Value="#FCA5A5"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Risk}" Value="Suspicious">
+                                        <Setter Property="Foreground" Value="#FCD34D"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="IP"       Binding="{Binding IP}"       Width="140"/>
+                            <DataGridTextColumn Header="HOSTNAME" Binding="{Binding Hostname}"  Width="*"/>
+                            <DataGridTextColumn Header="RISCO"    Binding="{Binding Risk}"      Width="90"/>
+                            <DataGridTextColumn Header="MOTIVO"   Binding="{Binding Reason}"    Width="260"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- ── SENSITIVE FILES SECTION ── -->
+                    <Grid Grid.Row="2" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Detector de Arquivos Sensíveis" FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Fg}"/>
+                            <TextBlock Text="{Binding SensitiveStatus}" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="#1E293B" CornerRadius="4" Padding="10,4" Margin="0,0,10,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="ALTO RISCO: " FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock Text="{Binding SensitiveHighCount}" FontSize="11" FontWeight="Bold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#34D399"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SensitiveHighCount}" Value="0">
+                                                        <Setter Property="Foreground" Value="#34D399"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                            <Button Content="🔎 Buscar Arquivos"
+                                    Command="{Binding ScanSensitiveFilesCommand}"
+                                    IsEnabled="{Binding IsScanningForSensitive, Converter={StaticResource InverseBool}}"
+                                    Background="#1E293B" Foreground="{StaticResource Accent}"
+                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
+                                    Padding="12,8" FontSize="12" Cursor="Hand"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <DataGrid Grid.Row="3" ItemsSource="{Binding SensitiveFiles}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              Background="#0F172A" Foreground="{StaticResource Fg}"
+                              GridLinesVisibility="Horizontal" RowBackground="#0F172A"
+                              AlternatingRowBackground="#1E293B" BorderThickness="1"
+                              BorderBrush="#1E293B" ColumnHeaderHeight="32" RowHeight="28">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#1E293B"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="FontSize"   Value="10"/>
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Padding"    Value="8,0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.CellStyle>
+                            <Style TargetType="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,4"/>
+                                <Setter Property="Foreground" Value="{StaticResource Fg}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Risk}" Value="High">
+                                        <Setter Property="Foreground" Value="#FCA5A5"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Risk}" Value="Medium">
+                                        <Setter Property="Foreground" Value="#FCD34D"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.CellStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ARQUIVO"  Binding="{Binding FilePath}"       Width="*"/>
+                            <DataGridTextColumn Header="PADRÃO"   Binding="{Binding MatchedPattern}" Width="180"/>
+                            <DataGridTextColumn Header="RISCO"    Binding="{Binding Risk}"           Width="80"/>
+                            <DataGridTextColumn Header="TAMANHO"  Binding="{Binding SizeKB, StringFormat='{}{0} KB'}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
         </TabControl>
     </DockPanel>
 </Window>

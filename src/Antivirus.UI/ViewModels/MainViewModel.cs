@@ -19,6 +19,7 @@ using AntivirusOS.Core.Updater;
 using AntivirusOS.Core.Events;
 using AntivirusOS.Core.Startup;
 using AntivirusOS.Core.Integrity;
+using AntivirusOS.Core.Security;
 using Microsoft.Win32;
 using WinForms = System.Windows.Forms;
 using Win32Dialog = Microsoft.Win32;
@@ -45,6 +46,8 @@ public partial class MainViewModel : ObservableObject
     private readonly StartupManager _startupManager = new();
     private readonly FileIntegrityService _integrityService;
     private readonly WifiScanner _wifiScanner = new();
+    private readonly HostsFileChecker _hostsChecker = new();
+    private readonly SensitiveFileDetector _sensitiveDetector = new();
     private CancellationTokenSource? _integrityCts;
     private ScheduledScanConfig _schedConfig = new();
     private AppSettings _appSettings = new();
@@ -903,6 +906,65 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ---- App Settings ----
+
+    // ---- Hosts file checker ----
+    public ObservableCollection<HostsEntry> HostsEntries { get; } = new();
+    [ObservableProperty] private bool   _isCheckingHosts;
+    [ObservableProperty] private string _hostsStatus         = "Nenhuma verificação executada.";
+    [ObservableProperty] private int    _hostsSuspiciousCount;
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task CheckHostsAsync()
+    {
+        IsCheckingHosts = true;
+        HostsStatus = "Analisando arquivo hosts…";
+        try
+        {
+            var entries = await _hostsChecker.AnalyzeAsync();
+            HostsEntries.Clear();
+            foreach (var e in entries) HostsEntries.Add(e);
+            HostsSuspiciousCount = entries.Count(e =>
+                e.Risk is HostsEntryRisk.Suspicious or HostsEntryRisk.Malicious);
+            HostsStatus = HostsSuspiciousCount == 0
+                ? $"✓ Hosts OK — {entries.Count} entrada(s) analisada(s)."
+                : $"⚠ {HostsSuspiciousCount} entrada(s) suspeita(s) em {entries.Count} total.";
+            if (HostsSuspiciousCount > 0)
+                _eventLogger.Log(AntivirusOS.Core.Events.EventKind.ThreatDetected,
+                    $"Hosts: {HostsSuspiciousCount} entrada(s) suspeita(s)");
+        }
+        catch (Exception ex) { HostsStatus = $"Erro: {ex.Message}"; }
+        finally { IsCheckingHosts = false; }
+    }
+
+    // ---- Sensitive file detector ----
+    public ObservableCollection<SensitiveFileResult> SensitiveFiles { get; } = new();
+    [ObservableProperty] private bool   _isScanningForSensitive;
+    [ObservableProperty] private string _sensitiveStatus    = "Nenhuma varredura executada.";
+    [ObservableProperty] private int    _sensitiveHighCount;
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task ScanSensitiveFilesAsync()
+    {
+        IsScanningForSensitive = true;
+        SensitiveStatus = "Procurando arquivos sensíveis…";
+        try
+        {
+            var results = await _sensitiveDetector.ScanAsync();
+            SensitiveFiles.Clear();
+            foreach (var r in results.OrderByDescending(r => r.Risk)) SensitiveFiles.Add(r);
+            SensitiveHighCount = results.Count(r => r.Risk == SensitiveFileRisk.High);
+            SensitiveStatus = results.Count == 0
+                ? "Nenhum arquivo sensível encontrado."
+                : $"{results.Count} arquivo(s) encontrado(s). {SensitiveHighCount} de alto risco.";
+            if (SensitiveHighCount > 0)
+                _eventLogger.Log(AntivirusOS.Core.Events.EventKind.ThreatDetected,
+                    $"Arquivos sensíveis: {SensitiveHighCount} de alto risco");
+        }
+        catch (Exception ex) { SensitiveStatus = $"Erro: {ex.Message}"; }
+        finally { IsScanningForSensitive = false; }
+    }
 
     // ---- Wi-Fi scanner ----
     public ObservableCollection<WifiNetwork> WifiNetworks { get; } = new();
