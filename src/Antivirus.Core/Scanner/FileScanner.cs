@@ -27,11 +27,16 @@ public class FileScanner : IFileScanner
 
     public async IAsyncEnumerable<ScanResult> ScanDirectoryAsync(string dirPath, bool recursive = true)
     {
-        var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        var options = new EnumerationOptions
+        {
+            RecurseSubdirectories = recursive,
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.System | FileAttributes.ReparsePoint
+        };
         IEnumerable<string> files;
         try
         {
-            files = Directory.EnumerateFiles(dirPath, "*", option);
+            files = Directory.EnumerateFiles(dirPath, "*", options);
         }
         catch (UnauthorizedAccessException)
         {
