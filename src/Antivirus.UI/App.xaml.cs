@@ -28,11 +28,16 @@ public partial class App : WinApp
     private NotifyIcon? _notifyIcon;
     private bool _exitRequested;
     private CancellationTokenSource _cts = new();
+    private AntivirusOS.Core.Settings.AppSettings _appSettings = new();
 
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         AvdonLogger.Instance.Info("App", "AVDON iniciando.");
+
+        var appDataPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AVDON");
+        _appSettings = AntivirusOS.Core.Settings.AppSettings.Load(appDataPath);
 
         var services = new ServiceCollection();
         ConfigureServices(services);
@@ -159,11 +164,32 @@ public partial class App : WinApp
     private void OnThreatDetected(object? sender, FileDetectedEventArgs e)
     {
         var result = e.Result;
-        Current.Dispatcher.Invoke(() =>
+
+        // Auto-quarantine malicious files when setting is on
+        if (_appSettings.AutoQuarantine && result.Level == AntivirusOS.Core.Models.ThreatLevel.Malicious)
         {
-            var toast = new ThreatToastWindow(result, _serviceProvider!.GetRequiredService<MainViewModel>());
-            toast.Show();
-        });
+            try
+            {
+                var qm = _serviceProvider!.GetRequiredService<IQuarantineManager>();
+                _ = qm.QuarantineAsync(result.FilePath, result.Hash);
+                AvdonLogger.Instance.Warn("AutoQuarantine",
+                    $"Auto-quarentenado: {result.FilePath}");
+            }
+            catch (Exception ex)
+            {
+                AvdonLogger.Instance.Error("AutoQuarantine",
+                    $"Falha ao quarentenar {result.FilePath}: {ex.Message}");
+            }
+        }
+
+        if (_appSettings.NotifyOnThreat)
+        {
+            Current.Dispatcher.Invoke(() =>
+            {
+                var toast = new ThreatToastWindow(result, _serviceProvider!.GetRequiredService<MainViewModel>());
+                toast.Show();
+            });
+        }
     }
 
     private void OnScheduledScanCompleted(object? sender, AntivirusOS.Core.Scanner.ScanCompletedEventArgs e)

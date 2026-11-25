@@ -8,6 +8,7 @@ using AntivirusOS.Core.Network;
 using AntivirusOS.Core.Reports;
 using AntivirusOS.Core.Scheduler;
 using AntivirusOS.Core.Logging;
+using AntivirusOS.Core.Settings;
 using System.Collections.Generic;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Scanner;
@@ -37,6 +38,7 @@ public partial class MainViewModel : ObservableObject
     private readonly TaskSchedulerService _taskScheduler;
     private readonly ProcessMonitorService _processMonitor;
     private ScheduledScanConfig _schedConfig = new();
+    private AppSettings _appSettings = new();
     private readonly string _appDataPath;
 
     private CancellationTokenSource? _scheduledScanCts;
@@ -164,6 +166,30 @@ public partial class MainViewModel : ObservableObject
 
     public ObservableCollection<ProcessEntry> ProcessEntries { get; } = new();
 
+    // Settings
+    [ObservableProperty]
+    private bool _autoQuarantine = true;
+
+    [ObservableProperty]
+    private bool _notifyOnThreat = true;
+
+    [ObservableProperty]
+    private bool _notifyOnScheduledScan = true;
+
+    [ObservableProperty]
+    private bool _scanArchives;
+
+    [ObservableProperty]
+    private int _maxFileSizeMB = 50;
+
+    [ObservableProperty]
+    private string _newExclusionPath = string.Empty;
+
+    [ObservableProperty]
+    private string _settingsStatus = string.Empty;
+
+    public ObservableCollection<string> ExclusionPaths { get; } = new();
+
     public ObservableCollection<ScanResult> ScanResults { get; } = new();
     public ObservableCollection<QuarantineEntry> QuarantineEntries { get; } = new();
     public ObservableCollection<ScanResult> HistoryResults { get; } = new();
@@ -234,6 +260,15 @@ public partial class MainViewModel : ObservableObject
         _isScheduleEnabled = _schedConfig.Enabled;
         _scheduleIntervalHours = _schedConfig.IntervalHours;
         RefreshScheduleDisplay();
+
+        _appSettings = AppSettings.Load(_appDataPath);
+        _autoQuarantine          = _appSettings.AutoQuarantine;
+        _notifyOnThreat          = _appSettings.NotifyOnThreat;
+        _notifyOnScheduledScan   = _appSettings.NotifyOnScheduledScan;
+        _scanArchives            = _appSettings.ScanArchives;
+        _maxFileSizeMB           = _appSettings.MaxFileSizeMB;
+        foreach (var p in _appSettings.ExclusionPaths)
+            ExclusionPaths.Add(p);
 
         _realTimeMonitor.ThreatDetected += OnThreatDetected;
 
@@ -779,6 +814,47 @@ public partial class MainViewModel : ObservableObject
             catch { }
         }
         catch (Exception ex) { ScanStatus = $"Erro ao exportar relatório: {ex.Message}"; }
+    }
+
+    // ---- App Settings ----
+
+    [RelayCommand]
+    private void SaveSettings()
+    {
+        _appSettings.AutoQuarantine        = AutoQuarantine;
+        _appSettings.NotifyOnThreat        = NotifyOnThreat;
+        _appSettings.NotifyOnScheduledScan = NotifyOnScheduledScan;
+        _appSettings.ScanArchives          = ScanArchives;
+        _appSettings.MaxFileSizeMB         = MaxFileSizeMB;
+        _appSettings.ExclusionPaths        = ExclusionPaths.ToList();
+        _appSettings.Save(_appDataPath);
+        SettingsStatus = "Configurações salvas.";
+        AvdonLogger.Instance.Info("Settings", "Configurações salvas pelo usuário.");
+    }
+
+    [RelayCommand]
+    private void AddExclusionPath()
+    {
+        var path = NewExclusionPath.Trim();
+        if (string.IsNullOrEmpty(path) || ExclusionPaths.Contains(path)) return;
+        ExclusionPaths.Add(path);
+        NewExclusionPath = string.Empty;
+        SettingsStatus = $"Exclusão adicionada: {path}";
+    }
+
+    [RelayCommand]
+    private void RemoveExclusionPath(string path)
+    {
+        ExclusionPaths.Remove(path);
+        SettingsStatus = $"Exclusão removida: {path}";
+    }
+
+    [RelayCommand]
+    private void BrowseExclusionPath()
+    {
+        using var dlg = new WinForms.FolderBrowserDialog { Description = "Selecione uma pasta para excluir do scan" };
+        if (dlg.ShowDialog() == WinForms.DialogResult.OK)
+            NewExclusionPath = dlg.SelectedPath;
     }
 
     // ---- Scheduled scan via Windows Task Scheduler ----

@@ -1561,7 +1561,169 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- Aba 7: Processos -->
+            <!-- Aba 7: Configurações -->
+            <TabItem Header="CONFIGURAÇÕES">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                    <StackPanel MaxWidth="680">
+
+                        <!-- Protection -->
+                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="PROTEÇÃO" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Quarentena automática" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Mover automaticamente arquivos maliciosos para quarentena ao detectar."
+                                                   FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" IsChecked="{Binding AutoQuarantine}" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Notificar ao detectar ameaça" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Exibir alerta em popup quando uma ameaça for encontrada."
+                                                   FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" IsChecked="{Binding NotifyOnThreat}" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Notificar ao concluir scan agendado" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Exibir balão na bandeja ao terminar um scan agendado."
+                                                   FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" IsChecked="{Binding NotifyOnScheduledScan}" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Scan options -->
+                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="SCAN" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
+
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Escanear arquivos compactados" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Inspecionar o conteúdo de .zip, .7z, .rar etc. (mais lento)."
+                                                   FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" IsChecked="{Binding ScanArchives}" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Tamanho máximo de arquivo (MB)" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Ignorar arquivos maiores que este limite durante o scan."
+                                                   FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <TextBox Grid.Column="1" Text="{Binding MaxFileSizeMB, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="#0F172A" Foreground="{StaticResource Fg}"
+                                             BorderBrush="#334155" Padding="8,6"
+                                             VerticalAlignment="Center" HorizontalAlignment="Stretch"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Exclusion paths -->
+                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="CAMINHOS EXCLUÍDOS" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Pastas e arquivos que serão ignorados durante qualquer scan."
+                                           FontSize="12" Foreground="#64748B" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+                                <!-- Add exclusion row -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0"
+                                             Text="{Binding NewExclusionPath, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="#0F172A" Foreground="{StaticResource Fg}"
+                                             BorderBrush="#334155" Padding="8,6"
+                                             />
+                                    <Button Grid.Column="1" Content="📁"
+                                            Command="{Binding BrowseExclusionPathCommand}"
+                                            Padding="10,6" Margin="6,0,0,0"
+                                            Background="#334155" Foreground="{StaticResource Fg}"
+                                            BorderThickness="0"/>
+                                    <Button Grid.Column="2" Content="Adicionar"
+                                            Command="{Binding AddExclusionPathCommand}"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Padding="10,6" Margin="6,0,0,0"/>
+                                </Grid>
+
+                                <!-- Exclusion list -->
+                                <ItemsControl ItemsSource="{Binding ExclusionPaths}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,0,0,4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Background="#0F172A" CornerRadius="4" Padding="8,5">
+                                                    <TextBlock Text="{Binding}" Foreground="#94A3B8" FontSize="12"
+                                                               FontFamily="Cascadia Code, Consolas, monospace"/>
+                                                </Border>
+                                                <Button Grid.Column="1" Content="✕"
+                                                        Command="{Binding DataContext.RemoveExclusionPathCommand,
+                                                                          RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="8,5" Margin="6,0,0,0"
+                                                        Background="#EF4444" Foreground="White"
+                                                        BorderThickness="0" FontSize="11"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Save row -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding SettingsStatus}" Foreground="#22C55E"
+                                       FontSize="12" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="💾 Salvar Configurações"
+                                    Command="{Binding SaveSettingsCommand}"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Padding="14,8"/>
+                        </Grid>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Aba 8: Processos (now Aba 8) -->
             <TabItem Header="PROCESSOS">
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
