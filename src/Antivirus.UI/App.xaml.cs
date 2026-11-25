@@ -68,7 +68,12 @@ public partial class App : WinApp
         var autoUpdater = _serviceProvider.GetRequiredService<AutoUpdater>();
         _ = autoUpdater.StartAsync(_cts.Token);
 
-        var mainWindow = new MainWindow(mainViewModel);
+        // Wire scheduled scanner tray notifications
+        var scheduledScanner = _serviceProvider.GetRequiredService<AntivirusOS.Core.Scanner.ScheduledScanner>();
+        scheduledScanner.ScanCompleted += OnScheduledScanCompleted;
+
+        var mainWindow = new MainWindow(mainViewModel,
+            _serviceProvider.GetRequiredService<IQuarantineManager>());
         mainWindow.Closing += (s, args) =>
         {
             if (!_exitRequested)
@@ -137,6 +142,19 @@ public partial class App : WinApp
         {
             var toast = new ThreatToastWindow(result, _serviceProvider!.GetRequiredService<MainViewModel>());
             toast.Show();
+        });
+    }
+
+    private void OnScheduledScanCompleted(object? sender, AntivirusOS.Core.Scanner.ScanCompletedEventArgs e)
+    {
+        Current.Dispatcher.Invoke(() =>
+        {
+            var msg = e.Threats == 0
+                ? $"Scan agendado concluído: {e.Total} arquivo(s) verificado(s). Nenhuma ameaça."
+                : $"⚠ Scan agendado: {e.Threats} ameaça(s) encontrada(s) em {e.Total} arquivo(s).";
+
+            _notifyIcon?.ShowBalloonTip(5000, "AVDON — Scan Agendado", msg,
+                e.Threats > 0 ? ToolTipIcon.Warning : ToolTipIcon.Info);
         });
     }
 

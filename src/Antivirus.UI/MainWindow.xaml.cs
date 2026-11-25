@@ -4,6 +4,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Antivirus.UI.ViewModels;
+using AntivirusOS.Core.Models;
+using AntivirusOS.Core.Quarantine;
 using WpfColor      = System.Windows.Media.Color;
 using WpfFontFamily = System.Windows.Media.FontFamily;
 using WpfPen        = System.Windows.Media.Pen;
@@ -16,12 +18,27 @@ public partial class MainWindow : Window
 {
     private readonly MainViewModel _vm;
 
-    public MainWindow(MainViewModel viewModel)
+    private readonly IQuarantineManager _quarantineManager;
+
+    public MainWindow(MainViewModel viewModel, IQuarantineManager quarantineManager)
     {
         InitializeComponent();
         _vm = viewModel;
+        _quarantineManager = quarantineManager;
         DataContext = viewModel;
         Icon = CreateAvdonIcon();
+
+        viewModel.InspectEntryRequested += OnInspectEntry;
+    }
+
+    private void OnInspectEntry(object? sender, QuarantineEntry entry)
+    {
+        var win = new QuarantineDetailWindow(entry, _quarantineManager, () =>
+        {
+            _vm.LoadQuarantineCommand.Execute(null);
+        });
+        win.Owner = this;
+        win.ShowDialog();
     }
 
     // ── App icon (taskbar + title bar) ───────────────────────────────────

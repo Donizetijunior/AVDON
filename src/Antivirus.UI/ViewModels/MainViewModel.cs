@@ -497,6 +497,16 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // Raised when user clicks Inspecionar — View subscribes to open QuarantineDetailWindow
+    public event EventHandler<QuarantineEntry>? InspectEntryRequested;
+
+    [RelayCommand]
+    private void InspectEntry(QuarantineEntry? entry)
+    {
+        if (entry is null) return;
+        InspectEntryRequested?.Invoke(this, entry);
+    }
+
     [RelayCommand]
     private async Task UpdateSignaturesAsync()
     {

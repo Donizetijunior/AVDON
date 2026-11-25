@@ -1,0 +1,110 @@
+<Window x:Class="Antivirus.UI.QuarantineDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Detalhe — Arquivo em Quarentena"
+        Height="520" Width="680"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="SingleBorderWindow"
+        ResizeMode="NoResize"
+        Background="#0F172A"
+        Foreground="#F1F5F9"
+        FontFamily="Segoe UI">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="ARQUIVO EM QUARENTENA" FontSize="11" FontWeight="Bold"
+                       Foreground="#64748B" Margin="0,0,0,4"/>
+            <TextBlock x:Name="TxtOriginalPath" FontSize="13" Foreground="#F1F5F9"
+                       TextWrapping="Wrap" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+
+        <!-- Info grid -->
+        <Border Grid.Row="1" Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="SHA-256:" Foreground="#64748B" FontSize="12"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="TxtHash"
+                           Foreground="#94A3B8" FontSize="12" FontFamily="Consolas" TextWrapping="Wrap"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Tamanho:" Foreground="#64748B" FontSize="12"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TxtSize" Foreground="#94A3B8" FontSize="12"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="Entropia:" Foreground="#64748B" FontSize="12"/>
+                <TextBlock Grid.Row="2" Grid.Column="3" x:Name="TxtEntropy" Foreground="#94A3B8" FontSize="12"/>
+            </Grid>
+        </Border>
+
+        <!-- Note (high entropy warning) -->
+        <TextBlock Grid.Row="1" x:Name="TxtNote"
+                   Foreground="#F59E0B" FontSize="12" Margin="0,80,0,0"
+                   TextWrapping="Wrap" Visibility="Collapsed"/>
+
+        <!-- Hex preview -->
+        <Border Grid.Row="2" Background="#1E293B" CornerRadius="8" Padding="12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock x:Name="TxtHex"
+                           FontFamily="Consolas" FontSize="11"
+                           Foreground="#64748B" TextWrapping="NoWrap"/>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button x:Name="BtnRestore" Content="Restaurar" Width="90" Height="34" Margin="0,0,8,0"
+                    Background="#1E293B" Foreground="#94A3B8" BorderThickness="0" Cursor="Hand"
+                    Click="BtnRestore_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button x:Name="BtnDelete" Content="Apagar definitivamente" Height="34" Margin="0,0,8,0"
+                    Background="#7F1D1D" Foreground="#FCA5A5" BorderThickness="0" Cursor="Hand"
+                    Click="BtnDelete_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button Content="Fechar" Width="80" Height="34"
+                    Background="#1E293B" Foreground="#94A3B8" BorderThickness="0" Cursor="Hand"
+                    Click="BtnClose_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6"
+                                Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>
