@@ -7,6 +7,7 @@ using AntivirusOS.Core.Analysis;
 using AntivirusOS.Core.DarkWeb;
 using AntivirusOS.Core.Monitor;
 using AntivirusOS.Core.Network;
+using AntivirusOS.Core.Reports;
 using AntivirusOS.Core.Quarantine;
 using AntivirusOS.Core.Ransomware;
 using AntivirusOS.Core.Scanner;
@@ -200,6 +201,8 @@ public partial class App : WinApp
         services.AddSingleton<ScheduledScanner>();
         services.AddSingleton<DarkWebMonitor>();
         services.AddSingleton<DnsBlocker>();
+        services.AddSingleton<NetworkMonitor>();
+        services.AddSingleton<ScanReporter>();
         services.AddSingleton<MainViewModel>();
     }
 
