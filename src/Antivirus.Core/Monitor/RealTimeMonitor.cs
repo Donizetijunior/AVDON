@@ -1,7 +1,7 @@
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Quarantine;
-using System.Collections.Concurrent;
+using System.Threading.Channels;
 
 namespace AntivirusOS.Core.Monitor;
 
@@ -10,7 +10,9 @@ public class RealTimeMonitor : IRealTimeMonitor, IDisposable
     private readonly IFileScanner _scanner;
     private readonly IQuarantineManager _quarantineManager;
     private FileSystemWatcher? _watcher;
-    private readonly ConcurrentDictionary<string, DateTime> _recentlyScanned = new();
+    private Channel<string>? _channel;
+    private CancellationTokenSource? _cts;
+    private Task? _consumerTask;
 
     public event EventHandler<FileDetectedEventArgs>? ThreatDetected;
 
@@ -22,7 +24,12 @@ public class RealTimeMonitor : IRealTimeMonitor, IDisposable
 
     public void StartMonitoring(string path)
     {
-        _watcher?.Dispose();
+        StopMonitoring();
+
+        _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions { SingleReader = true });
+        _cts = new CancellationTokenSource();
+        _consumerTask = Task.Run(() => ConsumeAsync(_cts.Token));
+
         _watcher = new FileSystemWatcher(path)
         {
             InternalBufferSize = 65536,
@@ -38,41 +45,100 @@ public class RealTimeMonitor : IRealTimeMonitor, IDisposable
     {
         _watcher?.Dispose();
         _watcher = null;
+
+        _channel?.Writer.TryComplete();
+        _cts?.Cancel();
+        try { _consumerTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
+        _cts?.Dispose();
+        _cts = null;
+        _consumerTask = null;
+        _channel = null;
     }
 
-    private async void OnFileEvent(object sender, FileSystemEventArgs e)
+    private void OnFileEvent(object sender, FileSystemEventArgs e)
     {
-        var path = e.FullPath;
-        var now = DateTime.UtcNow;
+        _channel?.Writer.TryWrite(e.FullPath);
+    }
 
-        if (_recentlyScanned.TryGetValue(path, out var lastScanned) &&
-            (now - lastScanned).TotalSeconds < 2)
-        {
-            return;
-        }
+    private async Task ConsumeAsync(CancellationToken token)
+    {
+        if (_channel == null) return;
 
-        _recentlyScanned[path] = now;
+        // Track pending paths with debounce
+        var pending = new Dictionary<string, DateTime>();
 
         try
         {
-            var result = await _scanner.ScanFileAsync(path);
+            while (!token.IsCancellationRequested)
+            {
+                // Drain newly arrived paths
+                while (_channel.Reader.TryRead(out var path))
+                    pending[path] = DateTime.UtcNow;
+
+                // Wait for channel or debounce timeout
+                if (pending.Count == 0)
+                {
+                    // Block until something arrives
+                    if (!await _channel.Reader.WaitToReadAsync(token))
+                        break;
+                    continue;
+                }
+
+                // Debounce: 500ms wait
+                await Task.Delay(500, token);
+
+                // Drain again after delay
+                while (_channel.Reader.TryRead(out var path))
+                    pending[path] = DateTime.UtcNow;
+
+                var toScan = pending.Keys.ToList();
+                pending.Clear();
+
+                foreach (var filePath in toScan)
+                {
+                    if (token.IsCancellationRequested) break;
+                    await ScanFileWithRetryAsync(filePath, token);
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task ScanFileWithRetryAsync(string filePath, CancellationToken token)
+    {
+        // Check if file exists and is accessible
+        if (!File.Exists(filePath)) return;
+
+        // Try to open with FileShare.Read to check if it's locked
+        bool accessible = false;
+        for (int attempt = 0; attempt < 3 && !token.IsCancellationRequested; attempt++)
+        {
+            try
+            {
+                using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                accessible = true;
+                break;
+            }
+            catch (IOException)
+            {
+                await Task.Delay(500, token);
+            }
+        }
+
+        if (!accessible) return;
+
+        try
+        {
+            var result = await _scanner.ScanFileAsync(filePath);
             if (result.Level != ThreatLevel.Clean)
             {
-                await _quarantineManager.QuarantineAsync(path, result.Hash);
+                await _quarantineManager.QuarantineAsync(filePath, result.Hash);
                 ThreatDetected?.Invoke(this, new FileDetectedEventArgs(result));
-            }
-
-            // Clean up entries older than 5 seconds
-            var cutoff = DateTime.UtcNow.AddSeconds(-5);
-            foreach (var key in _recentlyScanned.Keys)
-            {
-                if (_recentlyScanned.TryGetValue(key, out var ts) && ts < cutoff)
-                    _recentlyScanned.TryRemove(key, out _);
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error scanning file {path}: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error scanning file {filePath}: {ex.Message}");
         }
     }
 
@@ -83,7 +149,6 @@ public class RealTimeMonitor : IRealTimeMonitor, IDisposable
 
     public void Dispose()
     {
-        _watcher?.Dispose();
-        _watcher = null;
+        StopMonitoring();
     }
 }
