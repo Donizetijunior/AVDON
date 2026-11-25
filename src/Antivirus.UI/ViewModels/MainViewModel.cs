@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AntivirusOS.Core.DarkWeb;
 using AntivirusOS.Core.Network;
+using AntivirusOS.Core.Reports;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Quarantine;
@@ -28,6 +29,8 @@ public partial class MainViewModel : ObservableObject
     private readonly ScheduledScanner _scheduledScanner;
     private readonly DarkWebMonitor _darkWebMonitor;
     private readonly DnsBlocker _dnsBlocker;
+    private readonly NetworkMonitor _networkMonitor;
+    private readonly ScanReporter _scanReporter;
 
     private CancellationTokenSource? _scheduledScanCts;
     private CancellationTokenSource? _scanCts;
@@ -91,6 +94,15 @@ public partial class MainViewModel : ObservableObject
         _realTimeMonitor.MonitoredPaths.Count == 0
             ? string.Empty
             : string.Join("\n", _realTimeMonitor.MonitoredPaths);
+
+    // Network monitor
+    [ObservableProperty]
+    private bool _isRefreshingNetwork;
+
+    [ObservableProperty]
+    private string _networkStatus = string.Empty;
+
+    public ObservableCollection<NetworkConnectionInfo> NetworkConnections { get; } = new();
 
     // DNS blocking
     [ObservableProperty]
@@ -158,7 +170,9 @@ public partial class MainViewModel : ObservableObject
         IScanHistory scanHistory,
         ScheduledScanner scheduledScanner,
         DarkWebMonitor darkWebMonitor,
-        DnsBlocker dnsBlocker)
+        DnsBlocker dnsBlocker,
+        NetworkMonitor networkMonitor,
+        ScanReporter scanReporter)
     {
         _fileScanner = fileScanner;
         _quarantineManager = quarantineManager;
@@ -169,6 +183,8 @@ public partial class MainViewModel : ObservableObject
         _scheduledScanner = scheduledScanner;
         _darkWebMonitor = darkWebMonitor;
         _dnsBlocker = dnsBlocker;
+        _networkMonitor = networkMonitor;
+        _scanReporter = scanReporter;
 
         _realTimeMonitor.ThreatDetected += OnThreatDetected;
 
@@ -593,6 +609,45 @@ public partial class MainViewModel : ObservableObject
             _ = _scheduledScanner.StartAsync(path, TimeSpan.FromHours(24), token);
         }
         await Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private async Task RefreshNetworkAsync()
+    {
+        IsRefreshingNetwork = true;
+        NetworkStatus = "Atualizando conexões…";
+        try
+        {
+            var connections = await _networkMonitor.GetConnectionsAsync();
+            NetworkConnections.Clear();
+            foreach (var c in connections.OrderByDescending(c => c.IsSuspicious))
+                NetworkConnections.Add(c);
+            var suspicious = connections.Count(c => c.IsSuspicious);
+            NetworkStatus = suspicious > 0
+                ? $"⚠ {suspicious} conexão(ões) suspeita(s) de {connections.Count} ativas"
+                : $"✓ {connections.Count} conexão(ões) ativas — sem suspeitas";
+        }
+        catch (Exception ex) { NetworkStatus = $"Erro: {ex.Message}"; }
+        finally { IsRefreshingNetwork = false; }
+    }
+
+    [RelayCommand]
+    private async Task ExportHistoryCsvAsync()
+    {
+        var dialog = new Win32Dialog.SaveFileDialog
+        {
+            Title = "Exportar histórico de scan",
+            Filter = "CSV|*.csv",
+            FileName = $"avdon_historico_{DateTime.Now:yyyyMMdd_HHmm}.csv"
+        };
+        if (dialog.ShowDialog() != true) return;
+        try
+        {
+            await _scanReporter.ExportToCsvAsync(HistoryResults, dialog.FileName);
+            ScanStatus = $"Histórico exportado: {Path.GetFileName(dialog.FileName)}";
+        }
+        catch (Exception ex) { ScanStatus = $"Erro ao exportar: {ex.Message}"; }
     }
 
     public async Task InitializeAsync()

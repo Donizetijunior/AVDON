@@ -25,6 +25,15 @@ public class BoolToVisibilityConverter : IValueConverter
 }
 
 [ValueConversion(typeof(bool), typeof(string))]
+public class BoolToFlagConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        => value is true ? "⚠" : string.Empty;
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        => System.Windows.Data.Binding.DoNothing;
+}
+
+[ValueConversion(typeof(bool), typeof(string))]
 public class MonitorButtonConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

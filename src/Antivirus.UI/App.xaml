@@ -11,6 +11,7 @@
             <conv:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
             <conv:MonitorButtonConverter x:Key="MonitorButtonConverter"/>
+            <conv:BoolToFlagConverter x:Key="BoolToFlagConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

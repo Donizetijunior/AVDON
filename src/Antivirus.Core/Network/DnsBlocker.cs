@@ -1,3 +1,5 @@
+using System.Runtime.Versioning;
+
 namespace AntivirusOS.Core.Network;
 
 /// <summary>
@@ -67,6 +69,7 @@ public class DnsBlocker
         return blocked;
     }
 
+    [SupportedOSPlatform("windows")]
     public async Task<(bool success, string message)> ApplyBlockListAsync(IEnumerable<string> domains)
     {
         if (!IsAdministrator())
@@ -99,6 +102,7 @@ public class DnsBlocker
         }
     }
 
+    [SupportedOSPlatform("windows")]
     public async Task<(bool success, string message)> ClearBlockListAsync()
     {
         if (!IsAdministrator())
