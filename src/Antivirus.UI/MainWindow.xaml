@@ -204,11 +204,82 @@
 
                         <Separator Margin="0,16"/>
 
+                        <TextBlock Text="Sistema" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                        <CheckBox Content="Iniciar com o Windows"
+                                  IsChecked="{Binding StartWithWindows}"
+                                  Margin="0,0,0,8"/>
+
+                        <Separator Margin="0,8"/>
+
+                        <TextBlock Text="Scan Agendado" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                        <CheckBox Content="Scan diário automático"
+                                  IsChecked="{Binding IsScheduledScanRunning}"
+                                  Margin="0,0,0,4"
+                                  IsEnabled="False"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="Pasta:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBox Width="300" Text="{Binding ScheduledScanPath}" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <Button Command="{Binding ToggleScheduledScanCommand}" HorizontalAlignment="Left" Margin="0,4,0,0">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Setter Property="Content" Value="▶ Iniciar Scan Agendado"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsScheduledScanRunning}" Value="True">
+                                            <Setter Property="Content" Value="⏹ Parar Scan Agendado"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+
+                        <Separator Margin="0,16"/>
+
                         <Button Content="💾 Salvar Configurações"
                                 Command="{Binding SaveApiKeyCommand}"
                                 HorizontalAlignment="Left"/>
                     </StackPanel>
                 </ScrollViewer>
+            </TabItem>
+
+            <!-- ===================== ABA 5: HISTÓRICO ===================== -->
+            <TabItem Header="📋 Histórico">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Content="🔄 Carregar Histórico"
+                                Command="{Binding LoadHistoryCommand}"/>
+                        <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" Foreground="Gray"
+                                   Text="Últimos 100 scans registrados"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding HistoryResults}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              AlternatingRowBackground="#F0F8FF"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Nível" Width="90"
+                                               Binding="{Binding Level}"/>
+                            <DataGridTextColumn Header="Arquivo" Width="*"
+                                               Binding="{Binding FilePath}"/>
+                            <DataGridTextColumn Header="Hash (SHA-256)" Width="260"
+                                               Binding="{Binding Hash}"/>
+                            <DataGridTextColumn Header="Data" Width="150"
+                                               Binding="{Binding ScannedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
             </TabItem>
 
         </TabControl>

@@ -8,8 +8,9 @@ using AntivirusOS.Core.Quarantine;
 using AntivirusOS.Core.Monitor;
 using AntivirusOS.Core.Signatures;
 using AntivirusOS.Core.Updater;
+using Microsoft.Win32;
 using WinForms = System.Windows.Forms;
-using Win32 = Microsoft.Win32;
+using Win32Dialog = Microsoft.Win32;
 
 namespace Antivirus.UI.ViewModels;
 
@@ -20,6 +21,10 @@ public partial class MainViewModel : ObservableObject
     private readonly IRealTimeMonitor _realTimeMonitor;
     private readonly ISignatureUpdater _signatureUpdater;
     private readonly ISignatureDatabase _signatureDatabase;
+    private readonly IScanHistory _scanHistory;
+    private readonly ScheduledScanner _scheduledScanner;
+
+    private CancellationTokenSource? _scheduledScanCts;
 
     [ObservableProperty]
     private string _scanStatus = "Pronto.";
@@ -45,21 +50,60 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isUpdatingSignatures;
 
+    [ObservableProperty]
+    private bool _isScheduledScanRunning;
+
+    [ObservableProperty]
+    private string _scheduledScanPath = string.Empty;
+
     public ObservableCollection<ScanResult> ScanResults { get; } = new();
     public ObservableCollection<QuarantineEntry> QuarantineEntries { get; } = new();
+    public ObservableCollection<ScanResult> HistoryResults { get; } = new();
+
+    // ---- Start with Windows (Registry) ----
+    private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
+    private const string AppName = "AntivirusOS";
+
+    public bool StartWithWindows
+    {
+        get
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RunKey);
+            return key?.GetValue(AppName) != null;
+        }
+        set
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true);
+            if (key == null) return;
+            if (value)
+            {
+                var exe = Environment.ProcessPath ?? System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+                key.SetValue(AppName, $"\"{exe}\"");
+            }
+            else
+            {
+                key.DeleteValue(AppName, throwOnMissingValue: false);
+            }
+            OnPropertyChanged();
+        }
+    }
 
     public MainViewModel(
         IFileScanner fileScanner,
         IQuarantineManager quarantineManager,
         IRealTimeMonitor realTimeMonitor,
         ISignatureUpdater signatureUpdater,
-        ISignatureDatabase signatureDatabase)
+        ISignatureDatabase signatureDatabase,
+        IScanHistory scanHistory,
+        ScheduledScanner scheduledScanner)
     {
         _fileScanner = fileScanner;
         _quarantineManager = quarantineManager;
         _realTimeMonitor = realTimeMonitor;
         _signatureUpdater = signatureUpdater;
         _signatureDatabase = signatureDatabase;
+        _scanHistory = scanHistory;
+        _scheduledScanner = scheduledScanner;
 
         _realTimeMonitor.ThreatDetected += OnThreatDetected;
 
@@ -78,7 +122,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task ScanFileAsync()
     {
-        var dialog = new Win32.OpenFileDialog { Title = "Selecionar arquivo para escanear" };
+        var dialog = new Win32Dialog.OpenFileDialog { Title = "Selecionar arquivo para escanear" };
         if (dialog.ShowDialog() != true) return;
 
         IsScanning = true;
@@ -87,6 +131,7 @@ public partial class MainViewModel : ObservableObject
         {
             var result = await _fileScanner.ScanFileAsync(dialog.FileName);
             ScanResults.Insert(0, result);
+            await _scanHistory.AddAsync(result);
             ScanStatus = result.Level == ThreatLevel.Clean
                 ? $"Limpo: {Path.GetFileName(dialog.FileName)}"
                 : $"AMEAÇA ({result.Level}): {Path.GetFileName(dialog.FileName)}";
@@ -120,6 +165,7 @@ public partial class MainViewModel : ObservableObject
                 total++;
                 if (result.Level != ThreatLevel.Clean) threats++;
                 ScanResults.Insert(0, result);
+                await _scanHistory.AddAsync(result);
             }
             ScanStatus = $"Concluído. {total} arquivos, {threats} ameaça(s).";
         }
@@ -252,9 +298,57 @@ public partial class MainViewModel : ObservableObject
         catch { /* silent */ }
     }
 
+    [RelayCommand]
+    private async Task LoadHistoryAsync()
+    {
+        try
+        {
+            var items = await _scanHistory.GetRecentAsync(100);
+            HistoryResults.Clear();
+            foreach (var item in items)
+                HistoryResults.Add(item);
+        }
+        catch (Exception ex)
+        {
+            ScanStatus = $"Erro ao carregar histórico: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    private async Task ToggleScheduledScanAsync()
+    {
+        if (IsScheduledScanRunning)
+        {
+            _scheduledScanCts?.Cancel();
+            _scheduledScanner.Stop();
+            IsScheduledScanRunning = false;
+            ScanStatus = "Scan agendado parado.";
+        }
+        else
+        {
+            if (string.IsNullOrWhiteSpace(ScheduledScanPath))
+            {
+                var dialog = new WinForms.FolderBrowserDialog
+                {
+                    Description = "Selecionar pasta para scan agendado"
+                };
+                if (dialog.ShowDialog() != WinForms.DialogResult.OK) return;
+                ScheduledScanPath = dialog.SelectedPath;
+            }
+            _scheduledScanCts = new CancellationTokenSource();
+            IsScheduledScanRunning = true;
+            ScanStatus = $"Scan agendado iniciado: {ScheduledScanPath}";
+            var path = ScheduledScanPath;
+            var token = _scheduledScanCts.Token;
+            _ = _scheduledScanner.StartAsync(path, TimeSpan.FromHours(24), token);
+        }
+        await Task.CompletedTask;
+    }
+
     public async Task InitializeAsync()
     {
         await _signatureDatabase.InitializeAsync();
+        await _scanHistory.InitializeAsync();
         SignatureCount = await _signatureDatabase.CountAsync();
         await LoadQuarantineAsync();
     }
