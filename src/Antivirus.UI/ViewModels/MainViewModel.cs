@@ -7,6 +7,7 @@ using AntivirusOS.Core.DarkWeb;
 using AntivirusOS.Core.Network;
 using AntivirusOS.Core.Reports;
 using AntivirusOS.Core.Scheduler;
+using AntivirusOS.Core.Logging;
 using System.Collections.Generic;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Scanner;
@@ -252,6 +253,8 @@ public partial class MainViewModel : ObservableObject
 
     private void OnThreatDetected(object? sender, FileDetectedEventArgs e)
     {
+        AvdonLogger.Instance.Warn("RealTimeMonitor",
+            $"Ameaça detectada: {e.Result.FilePath} [{e.Result.Level}]");
         Application.Current.Dispatcher.Invoke(() =>
         {
             MonitorLog += $"[{DateTime.Now:HH:mm:ss}] AMEAÇA: {e.Result.FilePath} — {e.Result.Level}\n";

@@ -9,6 +9,7 @@ using AntivirusOS.Core.Monitor;
 using AntivirusOS.Core.Network;
 using AntivirusOS.Core.Reports;
 using AntivirusOS.Core.Scheduler;
+using AntivirusOS.Core.Logging;
 using AntivirusOS.Core.Quarantine;
 using AntivirusOS.Core.Ransomware;
 using AntivirusOS.Core.Scanner;
@@ -31,6 +32,7 @@ public partial class App : WinApp
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        AvdonLogger.Instance.Info("App", "AVDON iniciando.");
 
         var services = new ServiceCollection();
         ConfigureServices(services);
@@ -73,7 +75,11 @@ public partial class App : WinApp
         scheduledScanner.ScanCompleted += OnScheduledScanCompleted;
 
         var mainWindow = new MainWindow(mainViewModel,
-            _serviceProvider.GetRequiredService<IQuarantineManager>());
+            _serviceProvider.GetRequiredService<IQuarantineManager>(),
+            _serviceProvider.GetRequiredService<IRealTimeMonitor>(),
+            _serviceProvider.GetRequiredService<RansomwareGuard>(),
+            _serviceProvider.GetRequiredService<DnsBlocker>(),
+            _serviceProvider.GetRequiredService<TaskSchedulerService>());
         mainWindow.Closing += (s, args) =>
         {
             if (!_exitRequested)
@@ -117,6 +123,18 @@ public partial class App : WinApp
                 w.Activate();
             }
         });
+        menu.Items.Add("Sobre", null, (s, e) =>
+        {
+            Current.Dispatcher.Invoke(() =>
+            {
+                var about = new AboutWindow(
+                    _serviceProvider!.GetRequiredService<IRealTimeMonitor>(),
+                    _serviceProvider!.GetRequiredService<RansomwareGuard>(),
+                    _serviceProvider!.GetRequiredService<DnsBlocker>(),
+                    _serviceProvider!.GetRequiredService<TaskSchedulerService>());
+                about.Show();
+            });
+        });
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Sair", null, (s, e) =>
         {
@@ -147,6 +165,12 @@ public partial class App : WinApp
 
     private void OnScheduledScanCompleted(object? sender, AntivirusOS.Core.Scanner.ScanCompletedEventArgs e)
     {
+        var logMsg = $"Scan agendado: {e.Total} arquivo(s), {e.Threats} ameaça(s).";
+        if (e.Threats > 0)
+            AvdonLogger.Instance.Warn("ScheduledScanner", logMsg);
+        else
+            AvdonLogger.Instance.Info("ScheduledScanner", logMsg);
+
         Current.Dispatcher.Invoke(() =>
         {
             var msg = e.Threats == 0
@@ -160,6 +184,9 @@ public partial class App : WinApp
 
     private void OnRansomwareAlert(object? sender, AntivirusOS.Core.Ransomware.RansomwareAlert alert)
     {
+        AvdonLogger.Instance.Warn("RansomwareGuard",
+            $"Alerta: {alert.Kind} — {alert.Path} ({alert.FileCount} arquivos)");
+
         Current.Dispatcher.Invoke(() =>
         {
             var msg = alert.Kind == AntivirusOS.Core.Ransomware.RansomwareAlertKind.HoneypotTriggered
@@ -228,6 +255,8 @@ public partial class App : WinApp
 
     protected override void OnExit(ExitEventArgs e)
     {
+        AvdonLogger.Instance.Info("App", "AVDON encerrando.");
+        AvdonLogger.Instance.Dispose();
         _serviceProvider?.GetService<RansomwareGuard>()?.Dispose();
         _notifyIcon?.Dispose();
         _cts.Cancel();

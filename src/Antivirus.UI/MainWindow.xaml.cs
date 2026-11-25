@@ -6,6 +6,10 @@ using System.Windows.Media.Imaging;
 using Antivirus.UI.ViewModels;
 using AntivirusOS.Core.Models;
 using AntivirusOS.Core.Quarantine;
+using AntivirusOS.Core.Monitor;
+using AntivirusOS.Core.Ransomware;
+using AntivirusOS.Core.Network;
+using AntivirusOS.Core.Scheduler;
 using WpfColor      = System.Windows.Media.Color;
 using WpfFontFamily = System.Windows.Media.FontFamily;
 using WpfPen        = System.Windows.Media.Pen;
@@ -19,12 +23,22 @@ public partial class MainWindow : Window
     private readonly MainViewModel _vm;
 
     private readonly IQuarantineManager _quarantineManager;
+    private readonly IRealTimeMonitor _realTimeMonitor;
+    private readonly RansomwareGuard _ransomGuard;
+    private readonly DnsBlocker _dnsBlocker;
+    private readonly TaskSchedulerService _taskScheduler;
 
-    public MainWindow(MainViewModel viewModel, IQuarantineManager quarantineManager)
+    public MainWindow(MainViewModel viewModel, IQuarantineManager quarantineManager,
+        IRealTimeMonitor realTimeMonitor, RansomwareGuard ransomGuard,
+        DnsBlocker dnsBlocker, TaskSchedulerService taskScheduler)
     {
         InitializeComponent();
         _vm = viewModel;
         _quarantineManager = quarantineManager;
+        _realTimeMonitor = realTimeMonitor;
+        _ransomGuard = ransomGuard;
+        _dnsBlocker = dnsBlocker;
+        _taskScheduler = taskScheduler;
         DataContext = viewModel;
         Icon = CreateAvdonIcon();
 
@@ -138,5 +152,14 @@ public partial class MainWindow : Window
         ApiKeyBox.Clear();
         _vm.ClaudeApiKey = Antivirus.UI.Properties.Settings.Default.ClaudeApiKey ?? string.Empty;
         ApiKeyPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void About_Click(object sender, RoutedEventArgs e)
+    {
+        var about = new AboutWindow(_realTimeMonitor, _ransomGuard, _dnsBlocker, _taskScheduler)
+        {
+            Owner = this
+        };
+        about.ShowDialog();
     }
 }

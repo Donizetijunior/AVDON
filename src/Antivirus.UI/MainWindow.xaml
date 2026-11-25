@@ -60,6 +60,24 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Stretch"
                             WindowChrome.IsHitTestVisibleInChrome="True">
 
+                    <!-- About -->
+                    <Button Click="About_Click" Width="60" Height="40" Padding="0" BorderThickness="0"
+                            ToolTip="Sobre o AVDON" Background="Transparent" Cursor="Arrow">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" x:Name="Bd">
+                                    <TextBlock Text="?" FontSize="14" FontWeight="Bold"
+                                               Foreground="#475569" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#1E293B"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+
                     <!-- Minimize -->
                     <Button Click="Minimize_Click" Width="46" Height="40" Padding="0" BorderThickness="0"
                             ToolTip="Minimizar" Background="Transparent" Cursor="Arrow">
