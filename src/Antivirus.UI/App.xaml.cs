@@ -16,6 +16,7 @@ using AntivirusOS.Core.Scanner;
 using AntivirusOS.Core.Signatures;
 using AntivirusOS.Core.Updater;
 using AntivirusOS.Core.Events;
+using AntivirusOS.Core.USB;
 using Antivirus.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using UISettings = Antivirus.UI.Properties.Settings;
@@ -30,6 +31,7 @@ public partial class App : WinApp
     private bool _exitRequested;
     private CancellationTokenSource _cts = new();
     private AntivirusOS.Core.Settings.AppSettings _appSettings = new();
+    private UsbWatcher? _usbWatcher;
 
     // Single-instance enforcement
     private static Mutex? _instanceMutex;
@@ -150,6 +152,11 @@ public partial class App : WinApp
         bool silentStart = e.Args.Contains("--background", StringComparer.OrdinalIgnoreCase);
         if (!silentStart)
             mainWindow.Show();
+
+        // USB drive watcher
+        _usbWatcher = new UsbWatcher();
+        _usbWatcher.DriveInserted += OnUsbDriveInserted;
+        _usbWatcher.Start();
 
         // --scan <path>: open and start scanning the given path immediately
         int scanIdx = Array.FindIndex(e.Args, a => a.Equals("--scan", StringComparison.OrdinalIgnoreCase));
@@ -355,10 +362,47 @@ public partial class App : WinApp
         services.AddSingleton<MainViewModel>();
     }
 
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void OnUsbDriveInserted(object? sender, DriveInsertedEventArgs e)
+    {
+        AvdonLogger.Instance.Info("USB", $"Drive inserido: {e.DriveLetter} ({e.VolumeName})");
+        _serviceProvider?.GetService<EventLogger>()?.Log(
+            EventKind.ScanStarted,
+            $"USB inserido: {e.DriveLetter} {e.VolumeName}",
+            e.DriveLetter);
+
+        Current.Dispatcher.Invoke(() =>
+        {
+            var label = string.IsNullOrEmpty(e.VolumeName) ? e.DriveLetter : $"{e.VolumeName} ({e.DriveLetter})";
+
+            if (_appSettings.ScanUsbOnInsert)
+            {
+                _notifyIcon?.ShowBalloonTip(3000, "AVDON — USB Detectado",
+                    $"Escaneando {label} automaticamente…", ToolTipIcon.Info);
+
+                var vm = _serviceProvider?.GetService<Antivirus.UI.ViewModels.MainViewModel>();
+                if (vm != null && !vm.IsScanning)
+                {
+                    vm.ScanPath = e.DriveLetter;
+                    _ = vm.FullScanCommand.ExecuteAsync(null);
+                    // Show main window
+                    foreach (System.Windows.Window w in Windows)
+                    { w.Show(); w.WindowState = System.Windows.WindowState.Normal; w.Activate(); break; }
+                }
+            }
+            else
+            {
+                _notifyIcon?.ShowBalloonTip(3000, "AVDON — USB Detectado",
+                    $"{label} inserido. Clique para escanear.", ToolTipIcon.Info);
+            }
+        });
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         AvdonLogger.Instance.Info("App", "AVDON encerrando.");
         AvdonLogger.Instance.Dispose();
+        _usbWatcher?.Dispose();
         _serviceProvider?.GetService<EventLogger>()?.Dispose();
         _serviceProvider?.GetService<RansomwareGuard>()?.Dispose();
         _notifyIcon?.Dispose();

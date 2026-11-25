@@ -8,6 +8,7 @@ public sealed class AppSettings
     public bool  NotifyOnThreat          { get; set; } = true;
     public bool  NotifyOnScheduledScan   { get; set; } = true;
     public bool  ScanArchives            { get; set; } = false;
+    public bool  ScanUsbOnInsert         { get; set; } = true;
     public int   MaxFileSizeMB           { get; set; } = 50;
     public List<string> ExclusionPaths   { get; set; } = new();
 

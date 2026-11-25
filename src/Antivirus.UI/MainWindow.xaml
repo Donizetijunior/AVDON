@@ -1668,6 +1668,19 @@
                                         <ColumnDefinition Width="120"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
+                                        <TextBlock Text="Escanear USB ao inserir" FontWeight="SemiBold" FontSize="13"/>
+                                        <TextBlock Text="Iniciar scan automaticamente ao conectar um drive removível."
+                                                   FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" IsChecked="{Binding ScanUsbOnInsert}" VerticalAlignment="Center"/>
+                                </Grid>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="120"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
                                         <TextBlock Text="Tamanho máximo de arquivo (MB)" FontWeight="SemiBold" FontSize="13"/>
                                         <TextBlock Text="Ignorar arquivos maiores que este limite durante o scan."
                                                    FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>

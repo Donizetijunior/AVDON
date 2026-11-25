@@ -196,6 +196,9 @@ public partial class MainViewModel : ObservableObject
     private bool _scanArchives;
 
     [ObservableProperty]
+    private bool _scanUsbOnInsert = true;
+
+    [ObservableProperty]
     private int _maxFileSizeMB = 50;
 
     [ObservableProperty]
@@ -293,6 +296,7 @@ public partial class MainViewModel : ObservableObject
         _notifyOnThreat          = _appSettings.NotifyOnThreat;
         _notifyOnScheduledScan   = _appSettings.NotifyOnScheduledScan;
         _scanArchives            = _appSettings.ScanArchives;
+        _scanUsbOnInsert         = _appSettings.ScanUsbOnInsert;
         _maxFileSizeMB           = _appSettings.MaxFileSizeMB;
         foreach (var p in _appSettings.ExclusionPaths)
             ExclusionPaths.Add(p);
@@ -1000,6 +1004,7 @@ public partial class MainViewModel : ObservableObject
         _appSettings.NotifyOnThreat        = NotifyOnThreat;
         _appSettings.NotifyOnScheduledScan = NotifyOnScheduledScan;
         _appSettings.ScanArchives          = ScanArchives;
+        _appSettings.ScanUsbOnInsert       = ScanUsbOnInsert;
         _appSettings.MaxFileSizeMB         = MaxFileSizeMB;
         _appSettings.ExclusionPaths        = ExclusionPaths.ToList();
         _appSettings.Save(_appDataPath);
