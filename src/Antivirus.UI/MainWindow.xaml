@@ -3,10 +3,214 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Antivirus.UI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="AntivirusOS" Height="600" Width="900"
+        WindowStartupLocation="CenterScreen">
 
-    </Grid>
+    <DockPanel>
+        <!-- Status bar -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Text="{Binding ScanStatus}"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <TabControl Margin="8">
+
+            <!-- ===================== ABA 1: SCAN ===================== -->
+            <TabItem Header="🔍 Escanear">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Toolbar -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Button Content="📄 Escanear Arquivo"
+                                Command="{Binding ScanFileCommand}"
+                                IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
+                        <Button Content="📁 Escanear Pasta"
+                                Command="{Binding ScanFolderCommand}"
+                                IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"/>
+                        <ProgressBar IsIndeterminate="True" Width="120" Height="20" Margin="8,0"
+                                     Visibility="{Binding IsScanning, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                    </StackPanel>
+
+                    <!-- Results list -->
+                    <DataGrid Grid.Row="1" Margin="0,8,0,0"
+                              ItemsSource="{Binding ScanResults}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              AlternatingRowBackground="#F5F5F5"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Nível" Width="90"
+                                               Binding="{Binding Level}"/>
+                            <DataGridTextColumn Header="Arquivo" Width="*"
+                                               Binding="{Binding FilePath}"/>
+                            <DataGridTextColumn Header="Hash (SHA-256)" Width="300"
+                                               Binding="{Binding Hash}"/>
+                            <DataGridTextColumn Header="Data" Width="150"
+                                               Binding="{Binding ScannedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
+                            <DataGridTemplateColumn Header="Ação" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Quarentenar"
+                                                Command="{Binding DataContext.QuarantineResultCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Padding="4,2" Margin="2"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ===================== ABA 2: PROTEÇÃO EM TEMPO REAL ===================== -->
+            <TabItem Header="🛡️ Proteção em Tempo Real">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Toggle + path -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                        <Button Command="{Binding ToggleMonitorCommand}" Width="180">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                    <Setter Property="Content" Value="▶ Iniciar Monitoramento"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                            <Setter Property="Content" Value="⏹ Parar Monitoramento"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Ellipse Width="12" Height="12" Margin="8,0" VerticalAlignment="Center">
+                            <Ellipse.Style>
+                                <Style TargetType="Ellipse">
+                                    <Setter Property="Fill" Value="Gray"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                            <Setter Property="Fill" Value="LimeGreen"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Ellipse.Style>
+                        </Ellipse>
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="Pasta monitorada:"/>
+                        <TextBox Width="300" Text="{Binding MonitoredPath}" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Separator Grid.Row="1" Margin="0,4"/>
+
+                    <!-- Log -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <TextBox Text="{Binding MonitorLog}"
+                                 IsReadOnly="True"
+                                 TextWrapping="Wrap"
+                                 VerticalAlignment="Stretch"
+                                 Background="#1E1E1E"
+                                 Foreground="#D4D4D4"
+                                 FontFamily="Consolas"
+                                 FontSize="12"
+                                 BorderThickness="0"/>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- ===================== ABA 3: QUARENTENA ===================== -->
+            <TabItem Header="🔒 Quarentena">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Arquivos isolados:" FontWeight="SemiBold" Margin="0,0,0,6"/>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding QuarantineEntries}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              AlternatingRowBackground="#FFF3F3"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Arquivo Original" Width="*"
+                                               Binding="{Binding OriginalPath}"/>
+                            <DataGridTextColumn Header="Quarentenado em" Width="150"
+                                               Binding="{Binding QuarantinedAt, StringFormat=\{0:dd/MM/yyyy HH:mm\}}"/>
+                            <DataGridTextColumn Header="Hash" Width="250"
+                                               Binding="{Binding Hash}"/>
+                            <DataGridTemplateColumn Header="Ações" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="Restaurar"
+                                                    Command="{Binding DataContext.RestoreEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="4,2" Margin="2"/>
+                                            <Button Content="Deletar"
+                                                    Command="{Binding DataContext.DeleteEntryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Padding="4,2" Margin="2"
+                                                    Foreground="White" Background="Crimson"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+
+            <!-- ===================== ABA 4: CONFIGURAÇÕES ===================== -->
+            <TabItem Header="⚙️ Configurações">
+                <ScrollViewer Margin="16">
+                    <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+
+                        <TextBlock Text="Claude AI" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                        <Label Content="API Key do Claude:"/>
+                        <TextBox Text="{Binding ClaudeApiKey, UpdateSourceTrigger=PropertyChanged}"
+                                 MaxLength="200"/>
+                        <TextBlock Text="Obtenha em: console.anthropic.com"
+                                   Foreground="Gray" FontSize="11" Margin="2,2,0,12"/>
+
+                        <Separator Margin="0,8"/>
+
+                        <TextBlock Text="Banco de Assinaturas" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <TextBlock Text="Assinaturas carregadas: " VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding SignatureCount, StringFormat=\{0:N0\}}"
+                                       FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="⬇ Atualizar Assinaturas (MalwareBazaar)"
+                                    Command="{Binding UpdateSignaturesCommand}"
+                                    IsEnabled="{Binding IsUpdatingSignatures, Converter={StaticResource InverseBoolConverter}}"/>
+                            <ProgressBar IsIndeterminate="True" Width="120" Height="20" Margin="8,0"
+                                         Visibility="{Binding IsUpdatingSignatures, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                        </StackPanel>
+
+                        <Separator Margin="0,16"/>
+
+                        <Button Content="💾 Salvar Configurações"
+                                Command="{Binding SaveApiKeyCommand}"
+                                HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+    </DockPanel>
 </Window>
