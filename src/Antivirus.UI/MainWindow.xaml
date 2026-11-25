@@ -1737,6 +1737,52 @@
                             </StackPanel>
                         </Border>
 
+                        <!-- Shell context menu integration -->
+                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="INTEGRAÇÃO COM EXPLORER" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
+                                <TextBlock FontSize="12" Foreground="#64748B" Margin="0,0,0,12" TextWrapping="Wrap"
+                                           Text="Adiciona a opção 'Escanear com AVDON' no menu de contexto (clique direito) de arquivos e pastas no Explorer. Requer permissão de Administrador."/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock VerticalAlignment="Center" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="✓ Registrado"/>
+                                                <Setter Property="Foreground" Value="#22C55E"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsShellMenuRegistered}" Value="False">
+                                                        <Setter Property="Text" Value="Não registrado"/>
+                                                        <Setter Property="Foreground" Value="#64748B"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <Button Grid.Column="1"
+                                            Content="Registrar"
+                                            Command="{Binding RegisterShellMenuCommand}"
+                                            IsEnabled="{Binding IsShellMenuRegistered, Converter={StaticResource InverseBoolConverter}}"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Padding="12,6" Margin="8,0,0,0"/>
+                                    <Button Grid.Column="2"
+                                            Content="Remover"
+                                            Command="{Binding UnregisterShellMenuCommand}"
+                                            IsEnabled="{Binding IsShellMenuRegistered}"
+                                            Background="#334155" Foreground="#94A3B8"
+                                            BorderThickness="0" Padding="12,6" Margin="8,0,0,0"/>
+                                </Grid>
+
+                                <TextBlock Text="{Binding ShellMenuStatus}" FontSize="11"
+                                           Foreground="#94A3B8" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+
                         <!-- Save row -->
                         <Grid>
                             <Grid.ColumnDefinitions>

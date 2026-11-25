@@ -1,10 +1,14 @@
 ﻿using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Antivirus.UI.ViewModels;
 using AntivirusOS.Core.Models;
+using WpfDataFormats    = System.Windows.DataFormats;
+using WpfDragEventArgs  = System.Windows.DragEventArgs;
+using WpfDragDropEffects = System.Windows.DragDropEffects;
 using AntivirusOS.Core.Quarantine;
 using AntivirusOS.Core.Monitor;
 using AntivirusOS.Core.Ransomware;
@@ -43,6 +47,16 @@ public partial class MainWindow : Window
         Icon = CreateAvdonIcon();
 
         viewModel.InspectEntryRequested += OnInspectEntry;
+
+        AllowDrop = true;
+        Drop      += OnWindowDrop;
+        DragOver  += (_, e) =>
+        {
+            e.Effects = e.Data.GetDataPresent(WpfDataFormats.FileDrop)
+                ? WpfDragDropEffects.Copy
+                : WpfDragDropEffects.None;
+            e.Handled = true;
+        };
     }
 
     private void OnInspectEntry(object? sender, QuarantineEntry entry)
@@ -152,6 +166,29 @@ public partial class MainWindow : Window
         ApiKeyBox.Clear();
         _vm.ClaudeApiKey = Antivirus.UI.Properties.Settings.Default.ClaudeApiKey ?? string.Empty;
         ApiKeyPanel.Visibility = Visibility.Collapsed;
+    }
+
+    private void OnWindowDrop(object sender, WpfDragEventArgs e)
+    {
+        if (!e.Data.GetDataPresent(WpfDataFormats.FileDrop)) return;
+        var paths = (string[])e.Data.GetData(WpfDataFormats.FileDrop);
+        if (paths == null || paths.Length == 0) return;
+
+        // Scan the first dropped path; expand directories to their direct children
+        var filesToScan = new List<string>();
+        foreach (var p in paths)
+        {
+            if (Directory.Exists(p))
+                filesToScan.Add(p);
+            else if (File.Exists(p))
+                filesToScan.Add(p);
+        }
+
+        if (filesToScan.Count == 0) return;
+
+        // Reuse FullScan with the dropped path(s) via ScanPath
+        _vm.ScanPath = filesToScan[0];
+        _vm.FullScanCommand.Execute(null);
     }
 
     private void About_Click(object sender, RoutedEventArgs e)

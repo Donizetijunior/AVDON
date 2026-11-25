@@ -149,6 +149,16 @@ public partial class App : WinApp
         bool silentStart = e.Args.Contains("--background", StringComparer.OrdinalIgnoreCase);
         if (!silentStart)
             mainWindow.Show();
+
+        // --scan <path>: open and start scanning the given path immediately
+        int scanIdx = Array.FindIndex(e.Args, a => a.Equals("--scan", StringComparison.OrdinalIgnoreCase));
+        if (scanIdx >= 0 && scanIdx + 1 < e.Args.Length)
+        {
+            var scanPath = e.Args[scanIdx + 1];
+            mainWindow.Show();
+            mainViewModel.ScanPath = scanPath;
+            _ = mainViewModel.FullScanCommand.ExecuteAsync(null);
+        }
     }
 
     private NotifyIcon CreateNotifyIcon()
@@ -338,6 +348,7 @@ public partial class App : WinApp
         services.AddSingleton<ScanReporter>();
         services.AddSingleton<TaskSchedulerService>();
         services.AddSingleton<AntivirusOS.Core.Monitor.ProcessMonitorService>();
+        services.AddSingleton<AntivirusOS.Core.Shell.ShellContextMenuService>();
         services.AddSingleton<MainViewModel>();
     }
 

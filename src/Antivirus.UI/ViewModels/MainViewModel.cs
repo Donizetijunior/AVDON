@@ -37,6 +37,7 @@ public partial class MainViewModel : ObservableObject
     private readonly ScanReporter _scanReporter;
     private readonly TaskSchedulerService _taskScheduler;
     private readonly ProcessMonitorService _processMonitor;
+    private readonly AntivirusOS.Core.Shell.ShellContextMenuService _shellMenu;
     private ScheduledScanConfig _schedConfig = new();
     private AppSettings _appSettings = new();
     private readonly string _appDataPath;
@@ -250,7 +251,8 @@ public partial class MainViewModel : ObservableObject
         NetworkMonitor networkMonitor,
         ScanReporter scanReporter,
         TaskSchedulerService taskScheduler,
-        ProcessMonitorService processMonitor)
+        ProcessMonitorService processMonitor,
+        AntivirusOS.Core.Shell.ShellContextMenuService shellMenu)
     {
         _fileScanner = fileScanner;
         _quarantineManager = quarantineManager;
@@ -265,6 +267,7 @@ public partial class MainViewModel : ObservableObject
         _scanReporter = scanReporter;
         _taskScheduler = taskScheduler;
         _processMonitor = processMonitor;
+        _shellMenu = shellMenu;
         _appDataPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AVDON");
         _schedConfig = ScheduledScanConfig.Load(_appDataPath);
@@ -302,6 +305,8 @@ public partial class MainViewModel : ObservableObject
         };
 
         ClaudeApiKey = Antivirus.UI.Properties.Settings.Default.ClaudeApiKey ?? string.Empty;
+
+        RefreshShellMenuState();
 
         // Uptime ticker — fires every second
         _uptimeTimer = new System.Timers.Timer(1000);
@@ -861,6 +866,39 @@ public partial class MainViewModel : ObservableObject
     }
 
     // ---- App Settings ----
+
+    [ObservableProperty]
+    private bool _isShellMenuRegistered;
+
+    [ObservableProperty]
+    private string _shellMenuStatus = string.Empty;
+
+    private void RefreshShellMenuState() =>
+        IsShellMenuRegistered = _shellMenu.IsRegistered();
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void RegisterShellMenu()
+    {
+        var exe = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName
+                  ?? Environment.ProcessPath ?? string.Empty;
+        if (string.IsNullOrEmpty(exe)) { ShellMenuStatus = "Executável não encontrado."; return; }
+
+        var (ok, msg) = _shellMenu.Register(exe);
+        ShellMenuStatus = msg;
+        IsShellMenuRegistered = ok && _shellMenu.IsRegistered();
+        AvdonLogger.Instance.Info("ShellMenu", msg);
+    }
+
+    [RelayCommand]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    private void UnregisterShellMenu()
+    {
+        var (_, msg) = _shellMenu.Unregister();
+        ShellMenuStatus = msg;
+        IsShellMenuRegistered = _shellMenu.IsRegistered();
+        AvdonLogger.Instance.Info("ShellMenu", msg);
+    }
 
     [RelayCommand]
     private void SaveSettings()
