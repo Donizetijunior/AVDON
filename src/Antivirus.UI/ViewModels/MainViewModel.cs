@@ -77,6 +77,21 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private int _totalThreatsBlocked;
 
+    [ObservableProperty]
+    private int _monitoredFolderCount;
+
+    // Computed from HistoryResults — updated via CollectionChanged
+    [ObservableProperty]
+    private int _historyTotalCount;
+
+    [ObservableProperty]
+    private int _historyThreatCount;
+
+    public string MonitoredPathsList =>
+        _realTimeMonitor.MonitoredPaths.Count == 0
+            ? string.Empty
+            : string.Join("\n", _realTimeMonitor.MonitoredPaths);
+
     // DNS blocking
     [ObservableProperty]
     private bool _isDnsBlocking;
@@ -163,6 +178,12 @@ public partial class MainViewModel : ObservableObject
             OnPropertyChanged(nameof(ThreatCount));
         };
 
+        HistoryResults.CollectionChanged += (_, _) =>
+        {
+            HistoryTotalCount = HistoryResults.Count;
+            HistoryThreatCount = HistoryResults.Count(r => r.Level != ThreatLevel.Clean);
+        };
+
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(ClaudeApiKey))
@@ -170,6 +191,12 @@ public partial class MainViewModel : ObservableObject
         };
 
         ClaudeApiKey = Antivirus.UI.Properties.Settings.Default.ClaudeApiKey ?? string.Empty;
+    }
+
+    partial void OnIsMonitoringChanged(bool value)
+    {
+        MonitoredFolderCount = value ? _realTimeMonitor.MonitoredPaths.Count : 0;
+        OnPropertyChanged(nameof(MonitoredPathsList));
     }
 
     private void OnThreatDetected(object? sender, FileDetectedEventArgs e)
@@ -345,6 +372,8 @@ public partial class MainViewModel : ObservableObject
             _realTimeMonitor.StopMonitoring();
             IsMonitoring = false;
             MonitoredPath = string.Empty;
+            MonitoredFolderCount = 0;
+            OnPropertyChanged(nameof(MonitoredPathsList));
             MonitorLog += $"[{DateTime.Now:HH:mm:ss}] Monitoramento parado.\n";
         }
         else
@@ -361,6 +390,8 @@ public partial class MainViewModel : ObservableObject
             _realTimeMonitor.StartMonitoring(criticalPaths);
             IsMonitoring = true;
             MonitoredPath = "Pastas críticas";
+            MonitoredFolderCount = _realTimeMonitor.MonitoredPaths.Count;
+            OnPropertyChanged(nameof(MonitoredPathsList));
             MonitorLog += $"[{DateTime.Now:HH:mm:ss}] Monitorando: Downloads, Área de Trabalho, Inicialização\n";
         }
     }
