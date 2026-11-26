@@ -409,7 +409,7 @@
                     </UniformGrid>
 
                     <!-- ── Live metrics row ── -->
-                    <UniformGrid Grid.Row="3" Rows="1" Columns="3" Margin="0,-12,0,0">
+                    <UniformGrid Grid.Row="3" Rows="1" Columns="3" Margin="0,0,0,0">
                         <Border Style="{StaticResource StatCard}" Margin="0,0,8,0">
                             <StackPanel>
                                 <TextBlock Text="UPTIME" Style="{StaticResource FieldLabel}"/>
@@ -1066,16 +1066,14 @@
 
                     <!-- Status -->
                     <TextBlock Grid.Row="2" Text="{Binding NetworkStatus}"
-                               Foreground="#94A3B8" FontSize="12"/>
+                               Foreground="{StaticResource FgMuted}" FontSize="12"/>
 
                     <!-- Connections table -->
                     <Border Grid.Row="4" Style="{StaticResource ContentCard}" Padding="0">
                         <DataGrid ItemsSource="{Binding NetworkConnections}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
-                                  CanUserAddRows="False"
-                                  RowBackground="#0D1117"
-                                  AlternatingRowBackground="#111827">
+                                  CanUserAddRows="False">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
                                     <Style.Triggers>
@@ -1270,11 +1268,10 @@
                         <TextBlock Style="{StaticResource SectionHeader}"
                                    Text="Monitoramento Dark Web" Margin="0,32,0,8"/>
 
-                        <Border Background="{StaticResource Surface}" CornerRadius="10"
-                                Padding="20,16" Margin="0,0,0,12">
+                        <Border Style="{StaticResource ContentCard}" Margin="0,0,0,12">
                             <StackPanel>
                                 <TextBlock Text="Verifique se seu e-mail apareceu em vazamentos de dados (HaveIBeenPwned)."
-                                           Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                           Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
                                 <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
@@ -1283,9 +1280,6 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox Grid.Column="0"
                                              Text="{Binding DarkWebEmail, UpdateSourceTrigger=PropertyChanged}"
-                                             Background="#0D1117" Foreground="#E2E8F0"
-                                             BorderBrush="#30415A" BorderThickness="1"
-                                             Padding="10,8" FontSize="13"
                                              Margin="0,0,8,0"/>
                                     <Button Grid.Column="1"
                                             Content="Verificar"
@@ -1296,8 +1290,7 @@
 
                                 <!-- Status -->
                                 <TextBlock Text="{Binding DarkWebStatus}"
-                                           FontSize="12" TextWrapping="Wrap"
-                                           Foreground="#94A3B8"/>
+                                           Style="{StaticResource MutedText}" TextWrapping="Wrap"/>
 
                                 <!-- Breaches list -->
                                 <ItemsControl ItemsSource="{Binding DarkWebBreaches}">
@@ -1333,11 +1326,10 @@
                         <TextBlock Style="{StaticResource SectionHeader}"
                                    Text="Bloqueio de DNS" Margin="0,32,0,8"/>
 
-                        <Border Background="{StaticResource Surface}" CornerRadius="10"
-                                Padding="20,16" Margin="0,0,0,12">
+                        <Border Style="{StaticResource ContentCard}" Margin="0,0,0,12">
                             <StackPanel>
                                 <TextBlock Text="Bloqueia domínios maliciosos conhecidos via arquivo hosts do Windows. Requer privilégios de administrador."
-                                           Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                           Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
                                 <!-- Admin warning -->
                                 <Border CornerRadius="6" Padding="12,8" Margin="0,0,0,10"
@@ -1365,47 +1357,30 @@
                                     <Button Content="Desativar"
                                             Command="{Binding DisableDnsBlockingCommand}"
                                             IsEnabled="{Binding IsDnsBlocking, Converter={StaticResource InverseBoolConverter}}"
-                                            Padding="12,8" Background="#1E293B" Foreground="#94A3B8"
-                                            BorderThickness="0" Cursor="Hand">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border x:Name="bg" Background="{TemplateBinding Background}"
-                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="bg" Property="Background" Value="#334155"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
+                                            Style="{StaticResource SecondaryButton}"
+                                            Padding="12,8"/>
                                 </StackPanel>
 
                                 <TextBlock Text="{Binding DnsBlockStatus}"
-                                           Foreground="#94A3B8" FontSize="12" Margin="0,10,0,0"
+                                           Style="{StaticResource MutedText}" Margin="0,10,0,0"
                                            TextWrapping="Wrap"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Scheduled Scan Section -->
-                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,16,0,0">
+                        <Border Style="{StaticResource ContentCard}" Margin="0,16,0,0">
                             <StackPanel>
-                                <TextBlock Text="SCAN AGENDADO" FontSize="11" FontWeight="Bold"
-                                           Foreground="#64748B" Margin="0,0,0,12"/>
+                                <TextBlock Text="Scan Agendado" Style="{StaticResource SubHeader}"/>
 
                                 <TextBlock Text="Registra uma tarefa no Agendador do Windows para executar scans automáticos mesmo com a janela fechada."
-                                           Foreground="#94A3B8" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                           Style="{StaticResource MutedText}" TextWrapping="Wrap" Margin="0,0,0,12"/>
 
                                 <!-- Interval picker -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                    <TextBlock Text="Intervalo (horas):" Foreground="#CBD5E1"
+                                    <TextBlock Text="Intervalo (horas):" Foreground="{StaticResource Fg}"
                                                FontSize="13" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                     <TextBox Width="60" Text="{Binding ScheduleIntervalHours, UpdateSourceTrigger=PropertyChanged}"
-                                             Background="#0F172A" Foreground="#F1F5F9"
-                                             BorderBrush="#334155" BorderThickness="1"
-                                             Padding="6,4" FontSize="13"/>
+                                             Padding="6,4"/>
                                 </StackPanel>
 
                                 <!-- Buttons -->
@@ -1418,23 +1393,8 @@
                                     <Button Content="Desativar"
                                             Command="{Binding DisableTaskScheduleCommand}"
                                             IsEnabled="{Binding IsScheduleEnabled}"
-                                            Padding="12,8" Background="#1E293B" Foreground="#94A3B8"
-                                            BorderThickness="0" Cursor="Hand">
-                                        <Button.Style>
-                                            <Style TargetType="Button">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border Background="{TemplateBinding Background}"
-                                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </Button.Style>
-                                    </Button>
+                                            Style="{StaticResource SecondaryButton}"
+                                            Padding="12,8"/>
                                 </StackPanel>
 
                                 <!-- Next run -->
@@ -1454,7 +1414,14 @@
             </TabItem>
 
             <!-- Aba 6: Relatórios -->
-            <TabItem Header="RELATÓRIOS">
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Relatórios" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
                     <StackPanel>
 
@@ -1464,53 +1431,41 @@
                                 <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Grid.Column="0" Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <Border Grid.Column="0" Style="{StaticResource StatCard}" Margin="0,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="TOTAL SCANEADOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
-                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#F1F5F9" Margin="0,4,0,0">
-                                        <TextBlock.Text>
-                                            <Binding Path="ReportSummary.Total" FallbackValue="—"/>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="TOTAL SCANEADOS"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="{StaticResource Fg}" Margin="0,4,0,0"
+                                               Text="{Binding ReportSummary.Total, FallbackValue='—'}"/>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="1" Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <Border Grid.Column="1" Style="{StaticResource StatCard}" Margin="0,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="LIMPOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
-                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#22C55E" Margin="0,4,0,0">
-                                        <TextBlock.Text>
-                                            <Binding Path="ReportSummary.Clean" FallbackValue="—"/>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="LIMPOS"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="{StaticResource Safe}" Margin="0,4,0,0"
+                                               Text="{Binding ReportSummary.Clean, FallbackValue='—'}"/>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="2" Background="#1E293B" CornerRadius="8" Padding="12" Margin="0,0,8,0">
+                            <Border Grid.Column="2" Style="{StaticResource StatCard}" Margin="0,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="SUSPEITOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
-                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#F59E0B" Margin="0,4,0,0">
-                                        <TextBlock.Text>
-                                            <Binding Path="ReportSummary.Suspicious" FallbackValue="—"/>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="SUSPEITOS"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="{StaticResource Warn}" Margin="0,4,0,0"
+                                               Text="{Binding ReportSummary.Suspicious, FallbackValue='—'}"/>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="3" Background="#1E293B" CornerRadius="8" Padding="12">
+                            <Border Grid.Column="3" Style="{StaticResource StatCard}">
                                 <StackPanel>
-                                    <TextBlock Text="MALICIOSOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
-                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="#EF4444" Margin="0,4,0,0">
-                                        <TextBlock.Text>
-                                            <Binding Path="ReportSummary.Malicious" FallbackValue="—"/>
-                                        </TextBlock.Text>
-                                    </TextBlock>
+                                    <TextBlock Style="{StaticResource FieldLabel}" Text="MALICIOSOS"/>
+                                    <TextBlock FontSize="28" FontWeight="Bold" Foreground="{StaticResource Danger}" Margin="0,4,0,0"
+                                               Text="{Binding ReportSummary.Malicious, FallbackValue='—'}"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
 
                         <!-- Chart section -->
-                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                        <Border Style="{StaticResource ContentCard}" Padding="16" Margin="0,0,0,16">
                             <StackPanel>
                                 <Grid Margin="0,0,0,12">
                                     <Grid.ColumnDefinitions>
@@ -1518,47 +1473,17 @@
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="AMEAÇAS — ÚLTIMOS 30 DIAS"
-                                               FontSize="11" FontWeight="Bold" Foreground="#64748B"
+                                               Style="{StaticResource FieldLabel}"
                                                VerticalAlignment="Center"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                                         <Button Content="↻ Atualizar"
                                                 Command="{Binding RefreshReportCommand}"
-                                                Padding="10,6" Background="#0F172A" Foreground="#94A3B8"
-                                                BorderThickness="0" Cursor="Hand" Margin="0,0,8,0">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="Button">
-                                                                <Border Background="{TemplateBinding Background}"
-                                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                </Border>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
+                                                Style="{StaticResource SecondaryButton}"
+                                                Padding="10,6" Margin="0,0,8,0"/>
                                         <Button Content="⬇ Exportar HTML"
                                                 Command="{Binding ExportHtmlReportCommand}"
-                                                Padding="10,6" Background="#00C8FF" Foreground="#0F172A"
-                                                FontWeight="SemiBold" BorderThickness="0" Cursor="Hand">
-                                            <Button.Style>
-                                                <Style TargetType="Button">
-                                                    <Setter Property="Template">
-                                                        <Setter.Value>
-                                                            <ControlTemplate TargetType="Button">
-                                                                <Border Background="{TemplateBinding Background}"
-                                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                                </Border>
-                                                            </ControlTemplate>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </Style>
-                                            </Button.Style>
-                                        </Button>
+                                                Style="{StaticResource PrimaryButton}"
+                                                Padding="10,6"/>
                                     </StackPanel>
                                 </Grid>
 
@@ -1577,15 +1502,11 @@
                         </Border>
 
                         <!-- Most common threat -->
-                        <Border Background="#1E293B" CornerRadius="8" Padding="16">
+                        <Border Style="{StaticResource ContentCard}" Padding="16">
                             <StackPanel>
-                                <TextBlock Text="AMEAÇA MAIS FREQUENTE" FontSize="11" FontWeight="Bold"
-                                           Foreground="#64748B" Margin="0,0,0,8"/>
-                                <TextBlock FontSize="15" Foreground="#F1F5F9" TextWrapping="Wrap">
-                                    <TextBlock.Text>
-                                        <Binding Path="ReportSummary.MostCommonThreat" FallbackValue="Nenhum dado ainda"/>
-                                    </TextBlock.Text>
-                                </TextBlock>
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="AMEAÇA MAIS FREQUENTE" Margin="0,0,0,8"/>
+                                <TextBlock FontSize="15" Foreground="{StaticResource Fg}" TextWrapping="Wrap"
+                                           Text="{Binding ReportSummary.MostCommonThreat, FallbackValue='Nenhum dado ainda'}"/>
                             </StackPanel>
                         </Border>
 
@@ -1594,14 +1515,21 @@
             </TabItem>
 
             <!-- Aba 7: Configurações -->
-            <TabItem Header="CONFIGURAÇÕES">
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Configurações" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
                     <StackPanel MaxWidth="680">
 
                         <!-- Protection -->
-                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="PROTEÇÃO" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Proteção" Style="{StaticResource SubHeader}"/>
 
                                 <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
@@ -1645,9 +1573,9 @@
                         </Border>
 
                         <!-- Scan options -->
-                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="SCAN" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Scan" Style="{StaticResource SubHeader}"/>
 
                                 <Grid Margin="0,0,0,10">
                                     <Grid.ColumnDefinitions>
@@ -1694,11 +1622,11 @@
                         </Border>
 
                         <!-- Exclusion paths -->
-                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="CAMINHOS EXCLUÍDOS" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
+                                <TextBlock Text="Caminhos Excluídos" Style="{StaticResource SubHeader}"/>
                                 <TextBlock Text="Pastas e arquivos que serão ignorados durante qualquer scan."
-                                           FontSize="12" Foreground="#64748B" Margin="0,0,0,10" TextWrapping="Wrap"/>
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,10" TextWrapping="Wrap"/>
 
                                 <!-- Add exclusion row -->
                                 <Grid Margin="0,0,0,10">
@@ -1751,10 +1679,10 @@
                         </Border>
 
                         <!-- Shell context menu integration -->
-                        <Border Background="#1E293B" CornerRadius="8" Padding="16" Margin="0,0,0,16">
+                        <Border Style="{StaticResource SettingsCard}">
                             <StackPanel>
-                                <TextBlock Text="INTEGRAÇÃO COM EXPLORER" Style="{StaticResource SectionHeader}" Margin="0,0,0,12"/>
-                                <TextBlock FontSize="12" Foreground="#64748B" Margin="0,0,0,12" TextWrapping="Wrap"
+                                <TextBlock Text="Integração com Explorer" Style="{StaticResource SubHeader}"/>
+                                <TextBlock Style="{StaticResource MutedText}" Margin="0,0,0,12" TextWrapping="Wrap"
                                            Text="Adiciona a opção 'Escanear com AVDON' no menu de contexto (clique direito) de arquivos e pastas no Explorer. Requer permissão de Administrador."/>
 
                                 <Grid>
@@ -1814,8 +1742,15 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- Aba 8: Processos (now Aba 8) -->
-            <TabItem Header="PROCESSOS">
+            <!-- Aba 8: Processos -->
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE756;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Processos" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1840,8 +1775,8 @@
                     </Grid>
 
                     <!-- Status bar -->
-                    <Border Grid.Row="1" Background="#1E293B" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
-                        <TextBlock Text="{Binding ProcessStatus}" Foreground="#94A3B8" FontSize="12"/>
+                    <Border Grid.Row="1" Style="{StaticResource SummaryBar}" Padding="10,6" Margin="0,0,0,10">
+                        <TextBlock Text="{Binding ProcessStatus}" Style="{StaticResource MutedText}"/>
                     </Border>
 
                     <!-- Process DataGrid -->
@@ -1849,26 +1784,12 @@
                               ItemsSource="{Binding ProcessEntries}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              Background="#0F172A"
-                              Foreground="{StaticResource Fg}"
                               BorderThickness="0"
-                              RowBackground="#0F172A"
-                              AlternatingRowBackground="#1E293B"
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
                               SelectionMode="Single"
                               CanUserReorderColumns="False"
                               CanUserResizeRows="False">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#1E293B"/>
-                                <Setter Property="Foreground" Value="#64748B"/>
-                                <Setter Property="FontSize" Value="11"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding" Value="8,6"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="BorderThickness" Value="0"/>
@@ -1897,7 +1818,14 @@
             </TabItem>
 
             <!-- Aba 9: Wi-Fi -->
-            <TabItem Header="WI-FI">
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE701;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Wi-Fi" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -1913,21 +1841,19 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Scanner de Segurança Wi-Fi" FontSize="16" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Fg}"/>
+                            <TextBlock Text="Scanner de Segurança Wi-Fi" Style="{StaticResource SubHeader}" Margin="0"/>
                             <TextBlock Text="Detecta redes abertas, WEP e outras configurações inseguras"
-                                       FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                       Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
                         </StackPanel>
-                        <Button Grid.Column="1" Content="📡 Escanear Redes"
+                        <Button Grid.Column="1" Content="Escanear Redes"
                                 Command="{Binding ScanWifiCommand}"
                                 IsEnabled="{Binding IsScanningWifi, Converter={StaticResource InverseBoolConverter}}"
-                                Background="#1E293B" Foreground="{StaticResource Accent}"
-                                BorderThickness="1" BorderBrush="{StaticResource Accent}"
-                                Padding="14,8" FontSize="12" Cursor="Hand"/>
+                                Style="{StaticResource OutlineButton}"
+                                VerticalAlignment="Center"/>
                     </Grid>
 
                     <!-- Summary bar -->
-                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                    <Border Grid.Row="1" Style="{StaticResource SummaryBar}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -1936,53 +1862,25 @@
                                 <ColumnDefinition Width="2*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="CONECTADO" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="CONECTADO" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding ConnectedSsid}" FontSize="13"
                                            Foreground="{StaticResource Accent}" FontWeight="SemiBold" Margin="0,2,0,0"
                                            TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="SEGURANÇA" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="SEGURANÇA" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding ConnectedSecurity}" FontSize="13"
-                                           FontWeight="SemiBold" Margin="0,2,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#34D399"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ConnectedSecurity}" Value="Open">
-                                                    <Setter Property="Foreground" Value="#FCA5A5"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ConnectedSecurity}" Value="WEP">
-                                                    <Setter Property="Foreground" Value="#FCA5A5"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ConnectedSecurity}" Value="—">
-                                                    <Setter Property="Foreground" Value="#64748B"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                           FontWeight="SemiBold" Foreground="{StaticResource Safe}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="REDES INSEGURAS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="REDES INSEGURAS" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding WifiInsecureCount}" FontSize="20"
-                                           FontWeight="Bold" Margin="0,2,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#34D399"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding WifiInsecureCount}" Value="0">
-                                                    <Setter Property="Foreground" Value="#34D399"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                           FontWeight="Bold" Foreground="{StaticResource Safe}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="3">
-                                <TextBlock Text="STATUS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding WifiStatus}" FontSize="11"
-                                           Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="STATUS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding WifiStatus}" Style="{StaticResource MutedText}"
+                                           Margin="0,4,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -1992,25 +1890,12 @@
                               ItemsSource="{Binding WifiNetworks}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              Background="#0A0F1A"
-                              RowBackground="#0A0F1A"
-                              AlternatingRowBackground="#0D1420"
                               BorderThickness="0"
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
                               SelectionMode="Single"
                               CanUserReorderColumns="False"
                               CanUserResizeRows="False">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#1E293B"/>
-                                <Setter Property="Foreground" Value="#64748B"/>
-                                <Setter Property="FontSize" Value="11"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding" Value="8,6"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="BorderThickness" Value="0"/>
@@ -2045,7 +1930,14 @@
             </TabItem>
 
             <!-- Aba 10: Integridade -->
-            <TabItem Header="INTEGRIDADE">
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xEBE8;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Integridade" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -2061,29 +1953,26 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Monitor de Integridade de Arquivos" FontSize="16" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Fg}"/>
+                            <TextBlock Text="Monitor de Integridade de Arquivos" Style="{StaticResource SubHeader}" Margin="0"/>
                             <TextBlock Text="Detecta modificações em arquivos críticos do sistema Windows"
-                                       FontSize="11" Foreground="#64748B" Margin="0,2,0,0"/>
+                                       Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <Button Content="📷 Criar Snapshot"
+                            <Button Content="Criar Snapshot"
                                     Command="{Binding TakeIntegritySnapshotCommand}"
                                     IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBoolConverter}}"
-                                    Background="#1E293B" Foreground="#94A3B8"
-                                    BorderThickness="1" BorderBrush="#334155"
-                                    Padding="12,8" FontSize="12" Cursor="Hand" Margin="0,0,8,0"/>
-                            <Button Content="🔍 Verificar Integridade"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Padding="12,8" Margin="0,0,8,0"/>
+                            <Button Content="Verificar Integridade"
                                     Command="{Binding VerifyIntegrityCommand}"
                                     IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBoolConverter}}"
-                                    Background="#1E293B" Foreground="{StaticResource Accent}"
-                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
-                                    Padding="12,8" FontSize="12" Cursor="Hand"/>
+                                    Style="{StaticResource OutlineButton}"
+                                    Padding="12,8"/>
                         </StackPanel>
                     </Grid>
 
                     <!-- Summary bar -->
-                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                    <Border Grid.Row="1" Style="{StaticResource SummaryBar}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -2092,35 +1981,24 @@
                                 <ColumnDefinition Width="2*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="TOTAL" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="TOTAL" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding IntegrityResults.Count}" FontSize="20"
                                            Foreground="{StaticResource Fg}" FontWeight="Bold" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="MODIFICADOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="MODIFICADOS" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding IntegrityModifiedCount}" FontSize="20"
-                                           FontWeight="Bold" Margin="0,2,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="#34D399"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IntegrityModifiedCount}" Value="0">
-                                                    <Setter Property="Foreground" Value="#34D399"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                           FontWeight="Bold" Foreground="{StaticResource Safe}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="AUSENTES" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="AUSENTES" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding IntegrityMissingCount}" FontSize="20"
-                                           FontWeight="Bold" Foreground="#FCA5A5" Margin="0,2,0,0"/>
+                                           FontWeight="Bold" Foreground="{StaticResource Danger}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="3">
-                                <TextBlock Text="STATUS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding IntegrityStatus}" FontSize="11"
-                                           Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="STATUS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding IntegrityStatus}" Style="{StaticResource MutedText}"
+                                           Margin="0,4,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -2130,9 +2008,6 @@
                               ItemsSource="{Binding IntegrityResults}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              Background="#0A0F1A"
-                              RowBackground="#0A0F1A"
-                              AlternatingRowBackground="#0D1420"
                               BorderThickness="0"
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
@@ -2190,7 +2065,14 @@
             </TabItem>
 
             <!-- Aba 10: Inicialização -->
-            <TabItem Header="INICIALIZAÇÃO">
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE9E9;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Inicialização" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -2214,13 +2096,12 @@
                         <Button Grid.Column="1" Content="🔍 Escanear Inicialização"
                                 Command="{Binding ScanStartupCommand}"
                                 IsEnabled="{Binding IsLoadingStartup, Converter={StaticResource InverseBoolConverter}}"
-                                Background="#1E293B" Foreground="{StaticResource Accent}"
-                                BorderThickness="1" BorderBrush="{StaticResource Accent}"
-                                Padding="14,8" FontSize="12" Cursor="Hand" VerticalAlignment="Center"/>
+                                Style="{StaticResource OutlineButton}"
+                                Padding="14,8" VerticalAlignment="Center"/>
                     </Grid>
 
                     <!-- Summary bar -->
-                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                    <Border Grid.Row="1" Style="{StaticResource SummaryBar}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -2228,30 +2109,19 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="TOTAL" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="TOTAL" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding StartupItems.Count}" FontSize="20"
                                            Foreground="{StaticResource Fg}" FontWeight="Bold" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="SUSPEITOS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="SUSPEITOS" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding StartupSuspiciousCount}" FontSize="20"
-                                           FontWeight="Bold" Margin="0,2,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource Fg}"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding StartupSuspiciousCount}" Value="0">
-                                                    <Setter Property="Foreground" Value="#34D399"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                           FontWeight="Bold" Foreground="{StaticResource Warn}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="STATUS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding StartupStatus}" FontSize="11"
-                                           Foreground="#94A3B8" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                <TextBlock Text="STATUS" Style="{StaticResource FieldLabel}"/>
+                                <TextBlock Text="{Binding StartupStatus}" Style="{StaticResource MutedText}"
+                                           Margin="0,4,0,0" TextWrapping="Wrap"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -2261,9 +2131,6 @@
                               ItemsSource="{Binding StartupItems}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              Background="#0A0F1A"
-                              RowBackground="#0A0F1A"
-                              AlternatingRowBackground="#0D1420"
                               BorderThickness="0"
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
@@ -2271,16 +2138,6 @@
                               CanUserReorderColumns="False"
                               CanUserResizeRows="False"
                               x:Name="StartupGrid">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#1E293B"/>
-                                <Setter Property="Foreground" Value="#64748B"/>
-                                <Setter Property="FontSize" Value="11"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding" Value="8,6"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="BorderThickness" Value="0"/>
@@ -2328,7 +2185,14 @@
             </TabItem>
 
             <!-- Aba 10: Eventos -->
-            <TabItem Header="EVENTOS">
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Eventos" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -2342,20 +2206,18 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Histórico de Eventos" FontSize="16" FontWeight="SemiBold"
-                                   Foreground="{StaticResource Fg}" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="0" Text="Histórico de Eventos" Style="{StaticResource SubHeader}"
+                                   Margin="0" VerticalAlignment="Center"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <TextBlock Text="{Binding EventsTodayCount, StringFormat='Hoje: {0}'}"
-                                       Foreground="#64748B" FontSize="12" VerticalAlignment="Center" Margin="0,0,16,0"/>
-                            <Button Content="↻ Atualizar" Command="{Binding RefreshEventsCommand}"
-                                    Background="#1E293B" Foreground="{StaticResource Accent}"
-                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
-                                    Padding="12,6" FontSize="12" Cursor="Hand"/>
+                                       Style="{StaticResource MutedText}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                            <Button Content="Atualizar" Command="{Binding RefreshEventsCommand}"
+                                    Style="{StaticResource OutlineButton}" Padding="12,6"/>
                         </StackPanel>
                     </Grid>
 
                     <!-- Sig DB info row -->
-                    <Border Grid.Row="1" Background="#0F172A" CornerRadius="6" Padding="14,10" Margin="0,0,0,12">
+                    <Border Grid.Row="1" Style="{StaticResource SummaryBar}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -2364,26 +2226,25 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="BASE DE ASSINATURAS" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="BASE DE ASSINATURAS" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding SignatureCount, StringFormat='{}{0:N0} assinaturas'}"
                                            FontSize="13" Foreground="{StaticResource Fg}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="ÚLTIMA ATUALIZAÇÃO" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="ÚLTIMA ATUALIZAÇÃO" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding SigLastUpdated}" FontSize="13"
                                            Foreground="{StaticResource Fg}" Margin="0,2,0,0"/>
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="EVENTOS HOJE" FontSize="10" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock Text="EVENTOS HOJE" Style="{StaticResource FieldLabel}"/>
                                 <TextBlock Text="{Binding EventsTodayCount}" FontSize="13"
                                            Foreground="{StaticResource Accent}" Margin="0,2,0,0"/>
                             </StackPanel>
-                            <Button Grid.Column="3" Content="🔄 Atualizar Assinaturas"
+                            <Button Grid.Column="3" Content="Atualizar Assinaturas"
                                     Command="{Binding UpdateSignaturesCommand}"
                                     IsEnabled="{Binding IsUpdatingSignatures, Converter={StaticResource InverseBoolConverter}}"
-                                    Background="#1E293B" Foreground="#34D399"
-                                    BorderThickness="1" BorderBrush="#34D399"
-                                    Padding="12,6" FontSize="12" Cursor="Hand" VerticalAlignment="Center"/>
+                                    Style="{StaticResource OutlineButton}"
+                                    Padding="12,6" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
 
@@ -2392,25 +2253,12 @@
                               ItemsSource="{Binding EventLog}"
                               AutoGenerateColumns="False"
                               IsReadOnly="True"
-                              Background="#0A0F1A"
-                              RowBackground="#0A0F1A"
-                              AlternatingRowBackground="#0D1420"
                               BorderThickness="0"
                               GridLinesVisibility="None"
                               HeadersVisibility="Column"
                               SelectionMode="Single"
                               CanUserReorderColumns="False"
                               CanUserResizeRows="False">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#1E293B"/>
-                                <Setter Property="Foreground" Value="#64748B"/>
-                                <Setter Property="FontSize" Value="11"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding" Value="8,6"/>
-                                <Setter Property="BorderThickness" Value="0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="BorderThickness" Value="0"/>
@@ -2440,7 +2288,14 @@
             </TabItem>
 
             <!-- Aba 11: Varredura de Segurança -->
-            <TabItem Header="VARREDURA">
+            <TabItem Style="{StaticResource SidebarTabItem}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE8B6;" FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Varredura" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -2456,14 +2311,13 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Verificador do Arquivo Hosts" FontSize="15" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Fg}"/>
-                            <TextBlock Text="{Binding HostsStatus}" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                            <TextBlock Text="Verificador do Arquivo Hosts" Style="{StaticResource SubHeader}" Margin="0"/>
+                            <TextBlock Text="{Binding HostsStatus}" Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Background="#1E293B" CornerRadius="4" Padding="10,4" Margin="0,0,10,0">
+                            <Border Style="{StaticResource StatCard}" Padding="10,4" Margin="0,0,10,0" CornerRadius="4">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="SUSPEITAS: " FontSize="11" Foreground="#64748B"/>
+                                    <TextBlock Text="SUSPEITAS: " Style="{StaticResource MutedText}"/>
                                     <TextBlock Text="{Binding HostsSuspiciousCount}" FontSize="11" FontWeight="Bold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
@@ -2478,31 +2332,19 @@
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
-                            <Button Content="🔍 Verificar Hosts"
+                            <Button Content="Verificar Hosts"
                                     Command="{Binding CheckHostsCommand}"
                                     IsEnabled="{Binding IsCheckingHosts, Converter={StaticResource InverseBoolConverter}}"
-                                    Background="#1E293B" Foreground="{StaticResource Accent}"
-                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
-                                    Padding="12,8" FontSize="12" Cursor="Hand"/>
+                                    Style="{StaticResource OutlineButton}"
+                                    Padding="12,8"/>
                         </StackPanel>
                     </Grid>
 
                     <DataGrid Grid.Row="1" ItemsSource="{Binding HostsEntries}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Background="#0F172A" Foreground="{StaticResource Fg}"
-                              GridLinesVisibility="Horizontal" RowBackground="#0F172A"
-                              AlternatingRowBackground="#1E293B" BorderThickness="1"
-                              BorderBrush="#1E293B" ColumnHeaderHeight="32" RowHeight="28"
+                              GridLinesVisibility="None" BorderThickness="0"
+                              ColumnHeaderHeight="32" RowHeight="28"
                               Margin="0,0,0,16" MaxHeight="210">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#1E293B"/>
-                                <Setter Property="Foreground" Value="#64748B"/>
-                                <Setter Property="FontSize"   Value="10"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding"    Value="8,0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="BorderThickness" Value="0"/>
@@ -2533,52 +2375,29 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="Detector de Arquivos Sensíveis" FontSize="15" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Fg}"/>
-                            <TextBlock Text="{Binding SensitiveStatus}" FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                            <TextBlock Text="Detector de Arquivos Sensíveis" Style="{StaticResource SubHeader}" Margin="0"/>
+                            <TextBlock Text="{Binding SensitiveStatus}" Style="{StaticResource MutedText}" Margin="0,2,0,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Border Background="#1E293B" CornerRadius="4" Padding="10,4" Margin="0,0,10,0">
+                            <Border Style="{StaticResource StatCard}" Padding="10,4" Margin="0,0,10,0" CornerRadius="4">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="ALTO RISCO: " FontSize="11" Foreground="#64748B"/>
-                                    <TextBlock Text="{Binding SensitiveHighCount}" FontSize="11" FontWeight="Bold">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="#34D399"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding SensitiveHighCount}" Value="0">
-                                                        <Setter Property="Foreground" Value="#34D399"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                    <TextBlock Text="ALTO RISCO: " Style="{StaticResource MutedText}"/>
+                                    <TextBlock Text="{Binding SensitiveHighCount}" FontSize="11" FontWeight="Bold"
+                                               Foreground="{StaticResource Safe}"/>
                                 </StackPanel>
                             </Border>
-                            <Button Content="🔎 Buscar Arquivos"
+                            <Button Content="Buscar Arquivos"
                                     Command="{Binding ScanSensitiveFilesCommand}"
                                     IsEnabled="{Binding IsScanningForSensitive, Converter={StaticResource InverseBoolConverter}}"
-                                    Background="#1E293B" Foreground="{StaticResource Accent}"
-                                    BorderThickness="1" BorderBrush="{StaticResource Accent}"
-                                    Padding="12,8" FontSize="12" Cursor="Hand"/>
+                                    Style="{StaticResource OutlineButton}"
+                                    Padding="12,8"/>
                         </StackPanel>
                     </Grid>
 
                     <DataGrid Grid.Row="3" ItemsSource="{Binding SensitiveFiles}"
                               AutoGenerateColumns="False" IsReadOnly="True"
-                              Background="#0F172A" Foreground="{StaticResource Fg}"
-                              GridLinesVisibility="Horizontal" RowBackground="#0F172A"
-                              AlternatingRowBackground="#1E293B" BorderThickness="1"
-                              BorderBrush="#1E293B" ColumnHeaderHeight="32" RowHeight="28">
-                        <DataGrid.ColumnHeaderStyle>
-                            <Style TargetType="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#1E293B"/>
-                                <Setter Property="Foreground" Value="#64748B"/>
-                                <Setter Property="FontSize"   Value="10"/>
-                                <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Padding"    Value="8,0"/>
-                            </Style>
-                        </DataGrid.ColumnHeaderStyle>
+                              GridLinesVisibility="None" BorderThickness="0"
+                              ColumnHeaderHeight="32" RowHeight="28">
                         <DataGrid.CellStyle>
                             <Style TargetType="DataGridCell">
                                 <Setter Property="BorderThickness" Value="0"/>
