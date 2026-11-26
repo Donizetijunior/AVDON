@@ -339,7 +339,7 @@
 
                     <!-- ── Metric cards ── -->
                     <UniformGrid Grid.Row="2" Rows="1" Columns="4">
-                        <Border Style="{StaticResource StatCard}" Margin="0,0,8,0">
+                        <Border Style="{StaticResource StatCard}" Margin="0,0,10,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Width="28" Height="28" CornerRadius="6"
@@ -358,7 +358,7 @@
                                 <TextBlock Text="Desde o início" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource StatCard}" Margin="4,0,4,0">
+                        <Border Style="{StaticResource StatCard}" Margin="5,0,5,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Width="28" Height="28" CornerRadius="6"
@@ -377,7 +377,7 @@
                                 <TextBlock Text="Base MalwareBazaar" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource StatCard}" Margin="4,0,4,0">
+                        <Border Style="{StaticResource StatCard}" Margin="5,0,5,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Width="28" Height="28" CornerRadius="6" Margin="0,0,8,0">
@@ -436,7 +436,7 @@
                                 </TextBlock>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource StatCard}" Margin="8,0,0,0">
+                        <Border Style="{StaticResource StatCard}" Margin="10,0,0,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Width="28" Height="28" CornerRadius="6"
@@ -489,8 +489,8 @@
                     </UniformGrid>
 
                     <!-- ── Live metrics row ── -->
-                    <UniformGrid Grid.Row="3" Rows="1" Columns="3" Margin="0,0,0,0">
-                        <Border Style="{StaticResource StatCard}" Margin="0,0,8,0">
+                    <UniformGrid Grid.Row="3" Rows="1" Columns="3" Margin="0,8,0,0">
+                        <Border Style="{StaticResource StatCard}" Margin="0,0,10,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Width="28" Height="28" CornerRadius="6"
@@ -508,7 +508,7 @@
                                 <TextBlock Text="Tempo de execução" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource StatCard}" Margin="4,0,4,0">
+                        <Border Style="{StaticResource StatCard}" Margin="5,0,5,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Width="28" Height="28" CornerRadius="6"
@@ -526,7 +526,7 @@
                                 <TextBlock Text="Detectadas em tempo real" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource StatCard}" Margin="8,0,0,0">
+                        <Border Style="{StaticResource StatCard}" Margin="10,0,0,0">
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Border Width="28" Height="28" CornerRadius="6"
