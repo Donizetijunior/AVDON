@@ -10,7 +10,8 @@ namespace AntivirusOS.Core.Updater;
 /// </summary>
 public sealed class SignatureUpdater : ISignatureUpdater
 {
-    private const string MalwareBazaarUrl = "https://bazaar.abuse.ch/export/csv/full/";
+    // Export recente (100 amostras) — endpoint ativo no MalwareBazaar
+    private const string MalwareBazaarUrl = "https://bazaar.abuse.ch/export/csv/recent/";
 
     private readonly HttpClient _httpClient;
     private readonly ISignatureDatabase _database;

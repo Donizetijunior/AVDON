@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Net.Http;
 using System.IO;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -658,9 +659,13 @@ public partial class MainViewModel : ObservableObject
                 $"Assinaturas: {added} novas. Total: {SignatureCount:N0}");
             LoadEvents();
         }
+        catch (HttpRequestException ex)
+        {
+            ScanStatus = $"Falha de rede ao atualizar assinaturas: {(int?)ex.StatusCode} {ex.StatusCode}";
+        }
         catch (Exception ex)
         {
-            ScanStatus = $"Erro ao atualizar: {ex.Message}";
+            ScanStatus = $"Erro ao atualizar assinaturas: {ex.Message}";
         }
         finally
         {
