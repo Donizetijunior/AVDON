@@ -1,4 +1,4 @@
-﻿<Window x:Class="Antivirus.UI.MainWindow"
+<Window x:Class="Antivirus.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -1920,7 +1920,7 @@
                         </StackPanel>
                         <Button Grid.Column="1" Content="📡 Escanear Redes"
                                 Command="{Binding ScanWifiCommand}"
-                                IsEnabled="{Binding IsScanningWifi, Converter={StaticResource InverseBool}}"
+                                IsEnabled="{Binding IsScanningWifi, Converter={StaticResource InverseBoolConverter}}"
                                 Background="#1E293B" Foreground="{StaticResource Accent}"
                                 BorderThickness="1" BorderBrush="{StaticResource Accent}"
                                 Padding="14,8" FontSize="12" Cursor="Hand"/>
@@ -2069,13 +2069,13 @@
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
                             <Button Content="📷 Criar Snapshot"
                                     Command="{Binding TakeIntegritySnapshotCommand}"
-                                    IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBool}}"
+                                    IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBoolConverter}}"
                                     Background="#1E293B" Foreground="#94A3B8"
                                     BorderThickness="1" BorderBrush="#334155"
                                     Padding="12,8" FontSize="12" Cursor="Hand" Margin="0,0,8,0"/>
                             <Button Content="🔍 Verificar Integridade"
                                     Command="{Binding VerifyIntegrityCommand}"
-                                    IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBool}}"
+                                    IsEnabled="{Binding IsCheckingIntegrity, Converter={StaticResource InverseBoolConverter}}"
                                     Background="#1E293B" Foreground="{StaticResource Accent}"
                                     BorderThickness="1" BorderBrush="{StaticResource Accent}"
                                     Padding="12,8" FontSize="12" Cursor="Hand"/>
@@ -2213,7 +2213,7 @@
                         </StackPanel>
                         <Button Grid.Column="1" Content="🔍 Escanear Inicialização"
                                 Command="{Binding ScanStartupCommand}"
-                                IsEnabled="{Binding IsLoadingStartup, Converter={StaticResource InverseBool}}"
+                                IsEnabled="{Binding IsLoadingStartup, Converter={StaticResource InverseBoolConverter}}"
                                 Background="#1E293B" Foreground="{StaticResource Accent}"
                                 BorderThickness="1" BorderBrush="{StaticResource Accent}"
                                 Padding="14,8" FontSize="12" Cursor="Hand" VerticalAlignment="Center"/>
@@ -2380,7 +2380,7 @@
                             </StackPanel>
                             <Button Grid.Column="3" Content="🔄 Atualizar Assinaturas"
                                     Command="{Binding UpdateSignaturesCommand}"
-                                    IsEnabled="{Binding IsUpdatingSignatures, Converter={StaticResource InverseBool}}"
+                                    IsEnabled="{Binding IsUpdatingSignatures, Converter={StaticResource InverseBoolConverter}}"
                                     Background="#1E293B" Foreground="#34D399"
                                     BorderThickness="1" BorderBrush="#34D399"
                                     Padding="12,6" FontSize="12" Cursor="Hand" VerticalAlignment="Center"/>
@@ -2480,7 +2480,7 @@
                             </Border>
                             <Button Content="🔍 Verificar Hosts"
                                     Command="{Binding CheckHostsCommand}"
-                                    IsEnabled="{Binding IsCheckingHosts, Converter={StaticResource InverseBool}}"
+                                    IsEnabled="{Binding IsCheckingHosts, Converter={StaticResource InverseBoolConverter}}"
                                     Background="#1E293B" Foreground="{StaticResource Accent}"
                                     BorderThickness="1" BorderBrush="{StaticResource Accent}"
                                     Padding="12,8" FontSize="12" Cursor="Hand"/>
@@ -2557,7 +2557,7 @@
                             </Border>
                             <Button Content="🔎 Buscar Arquivos"
                                     Command="{Binding ScanSensitiveFilesCommand}"
-                                    IsEnabled="{Binding IsScanningForSensitive, Converter={StaticResource InverseBool}}"
+                                    IsEnabled="{Binding IsScanningForSensitive, Converter={StaticResource InverseBoolConverter}}"
                                     Background="#1E293B" Foreground="{StaticResource Accent}"
                                     BorderThickness="1" BorderBrush="{StaticResource Accent}"
                                     Padding="12,8" FontSize="12" Cursor="Hand"/>
