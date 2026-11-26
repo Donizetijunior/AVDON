@@ -88,14 +88,83 @@ public sealed class ProcessMonitorService
         catch                               { return (string.Empty, ThreatLevel.Clean, "Erro ao ler"); }
     }
 
+    // Known-good publishers whose apps may live in AppData (Electron apps, updaters, etc.)
+    private static readonly HashSet<string> _trustedPublishers = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Anthropic", "Anthropic PBC",
+        "Discord Inc.", "Discord",
+        "Valve Corporation",
+        "Riot Games, Inc.", "Riot Games",
+        "Spotify AB",
+        "Slack Technologies",
+        "Microsoft Corporation",
+        "Google LLC",
+        "Mozilla Corporation",
+        "Brave Software, Inc.",
+        "GitHub, Inc.",
+        "JetBrains s.r.o.",
+        "Oracle Corporation",
+        "Docker Inc.",
+        "1Password",
+        "Logitech",
+        "LGHUB",
+        "Epic Games Inc.",
+        "Zoom Video Communications",
+        "Notion Labs",
+        "Figma, Inc.",
+    };
+
+    // Specific folder substrings that belong to known-good apps
+    private static readonly string[] _trustedFolderFragments =
+    [
+        @"\AnthropicClaude\",
+        @"\Claude\",
+        @"\Discord\",
+        @"\Steam\",
+        @"\Spotify\",
+        @"\slack\",
+        @"\BraveSoftware\",
+        @"\Google\Chrome\",
+        @"\Microsoft\",
+        @"\LGHUB\",
+        @"\EpicGamesLauncher\",
+        @"\Riot Games\",
+        @"\zoom\",
+        @"\1Password\",
+        @"\Notion\",
+        @"\Figma\",
+        @"\JetBrains\",
+        @"\Docker\",
+    ];
+
     private static bool IsInSuspiciousLocation(string path)
     {
         var temp    = Path.GetTempPath();
         var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var local   = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        return path.StartsWith(temp,    StringComparison.OrdinalIgnoreCase) ||
-               path.StartsWith(appdata, StringComparison.OrdinalIgnoreCase) ||
-               path.StartsWith(local,   StringComparison.OrdinalIgnoreCase);
+        bool inSuspiciousDir =
+            path.StartsWith(temp,    StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(appdata, StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith(local,   StringComparison.OrdinalIgnoreCase);
+
+        if (!inSuspiciousDir) return false;
+
+        // Whitelist: known trusted folder fragments
+        if (_trustedFolderFragments.Any(f =>
+                path.Contains(f, StringComparison.OrdinalIgnoreCase)))
+            return false;
+
+        // Whitelist: check digital publisher via FileVersionInfo
+        try
+        {
+            var company = System.Diagnostics.FileVersionInfo
+                .GetVersionInfo(path).CompanyName ?? string.Empty;
+            if (_trustedPublishers.Contains(company.Trim()))
+                return false;
+        }
+        catch { }
+
+        return true;
     }
 }
