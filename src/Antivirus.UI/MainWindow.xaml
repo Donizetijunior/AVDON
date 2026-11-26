@@ -2040,7 +2040,7 @@
                     <TextBlock Grid.Row="3" Margin="0,8,0,0"
                                Text="Escaneando redes Wi-Fi…"
                                Foreground="{StaticResource Accent}" FontSize="11"
-                               Visibility="{Binding IsScanningWifi, Converter={StaticResource BoolToVis}}"/>
+                               Visibility="{Binding IsScanningWifi, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </Grid>
             </TabItem>
 
@@ -2185,7 +2185,7 @@
                     <TextBlock Grid.Row="3" Margin="0,8,0,0"
                                Text="Verificando integridade…"
                                Foreground="{StaticResource Accent}" FontSize="11"
-                               Visibility="{Binding IsCheckingIntegrity, Converter={StaticResource BoolToVis}}"/>
+                               Visibility="{Binding IsCheckingIntegrity, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </Grid>
             </TabItem>
 
@@ -2323,7 +2323,7 @@
                     <TextBlock Grid.Row="3" Margin="0,8,0,0"
                                Text="Escaneando itens de inicialização…"
                                Foreground="{StaticResource Accent}" FontSize="11"
-                               Visibility="{Binding IsLoadingStartup, Converter={StaticResource BoolToVis}}"/>
+                               Visibility="{Binding IsLoadingStartup, Converter={StaticResource BoolToVisibilityConverter}}"/>
                 </Grid>
             </TabItem>
 
