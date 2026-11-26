@@ -1107,6 +1107,19 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
+    private void InvestigateStartupItem(StartupItem? item)
+    {
+        if (item is null) return;
+        // Open file location in Explorer
+        if (File.Exists(item.FilePath))
+            System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{item.FilePath}\"");
+        // Open VirusTotal with the hash (if available)
+        if (!string.IsNullOrEmpty(item.Hash))
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                $"https://www.virustotal.com/gui/file/{item.Hash}") { UseShellExecute = true });
+    }
+
     // ---- Event log helpers ----
 
     private void LoadEvents()

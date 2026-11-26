@@ -2159,17 +2159,27 @@
                             <DataGridTextColumn Header="FONTE"      Binding="{Binding Source}"    Width="120"/>
                             <DataGridTextColumn Header="PUBLISHER"  Binding="{Binding Publisher}" Width="140"/>
                             <DataGridTextColumn Header="CAMINHO"    Binding="{Binding FilePath}"  Width="*"/>
-                            <DataGridTemplateColumn Header="AÇÃO" Width="110">
+                            <DataGridTemplateColumn Header="AÇÕES" Width="200">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Content="Desabilitar"
-                                                Command="{Binding DataContext.DisableStartupItemCommand,
-                                                          RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Background="Transparent"
-                                                Foreground="#F87171"
-                                                BorderThickness="1" BorderBrush="#F87171"
-                                                Padding="6,2" FontSize="11" Cursor="Hand" Margin="4,2"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="🔍 Investigar"
+                                                    Command="{Binding DataContext.InvestigateStartupItemCommand,
+                                                              RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Background="Transparent"
+                                                    Foreground="#38BDF8"
+                                                    BorderThickness="1" BorderBrush="#38BDF8"
+                                                    Padding="6,2" FontSize="11" Cursor="Hand" Margin="4,2"/>
+                                            <Button Content="⛔ Desabilitar"
+                                                    Command="{Binding DataContext.DisableStartupItemCommand,
+                                                              RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Background="Transparent"
+                                                    Foreground="#F87171"
+                                                    BorderThickness="1" BorderBrush="#F87171"
+                                                    Padding="6,2" FontSize="11" Cursor="Hand" Margin="4,2"/>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>

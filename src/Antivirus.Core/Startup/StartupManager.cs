@@ -67,8 +67,7 @@ public sealed class StartupManager
             var (root, path) = ResolveKey(item.Source);
             using var key = root?.OpenSubKey(path, writable: true);
             if (key is null) return (false, "Chave de registro não encontrada.");
-            // Move value to Disabled key
-            var disabledPath = path.Replace(@"\Run", @"\Run\AutorunsDisabled");
+            var disabledPath = path + @"\AutorunsDisabled";
             using var disabled = root!.CreateSubKey(disabledPath, writable: true);
             var current = key.GetValue(item.Name);
             disabled.SetValue(item.Name, current ?? string.Empty);
@@ -138,10 +137,23 @@ public sealed class StartupManager
 
     private static (RegistryKey? root, string path) ResolveKey(string source)
     {
-        if (source.StartsWith("HKCU"))
-            return (Registry.CurrentUser, source["HKCU\\".Length..]);
-        if (source.StartsWith("HKLM"))
-            return (Registry.LocalMachine, source["HKLM\\".Length..]);
-        return (null, string.Empty);
+        // source is like "HKCU\Run" or "HKLM\RunOnce" — map to full registry path
+        var (root, hive) = source.StartsWith("HKCU")
+            ? (Registry.CurrentUser,  "HKCU\\")
+            : source.StartsWith("HKLM")
+                ? (Registry.LocalMachine, "HKLM\\")
+                : ((RegistryKey?)null, string.Empty);
+
+        if (root is null) return (null, string.Empty);
+
+        var suffix = source[hive.Length..]; // "Run" or "RunOnce"
+        var fullPath = suffix switch
+        {
+            "Run"     => @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
+            "RunOnce" => @"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",
+            _         => string.Empty
+        };
+
+        return string.IsNullOrEmpty(fullPath) ? (null, string.Empty) : (root, fullPath);
     }
 }
