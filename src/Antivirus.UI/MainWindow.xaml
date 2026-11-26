@@ -205,114 +205,135 @@
                     </Grid.RowDefinitions>
 
                     <!-- ── Status Shield ── -->
-                    <Border Grid.Row="0" Style="{StaticResource ContentCard}" Padding="32,28">
+                    <Border Grid.Row="0" Style="{StaticResource ContentCard}" Padding="0">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="5"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
+                            <!-- Accent bar lateral -->
+                            <Border Grid.Column="0" CornerRadius="10,0,0,10">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource Safe}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                <Setter Property="Background" Value="{StaticResource Danger}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                            </Border>
+                            <!-- Conteúdo principal -->
+                            <Grid Grid.Column="1" Margin="28,24,28,24">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-                            <!-- Big shield circle -->
-                            <Grid Grid.Column="0" Width="90" Height="90" Margin="0,0,28,0">
-                                <Ellipse>
-                                    <Ellipse.Style>
-                                        <Style TargetType="Ellipse">
-                                            <Setter Property="Fill" Value="#2600C853"/>
-                                            <Setter Property="Stroke" Value="#00C853"/>
-                                            <Setter Property="StrokeThickness" Value="2.5"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
-                                                    <Setter Property="Fill" Value="#26EF4444"/>
-                                                    <Setter Property="Stroke" Value="#EF4444"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Ellipse.Style>
-                                </Ellipse>
-                                <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="38"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="&#xEA18;"/>
-                                            <Setter Property="Foreground" Value="#00C853"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
-                                                    <Setter Property="Foreground" Value="#EF4444"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <!-- Shield icon -->
+                                <Grid Grid.Column="0" Width="80" Height="80" Margin="0,0,24,0">
+                                    <Ellipse>
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{StaticResource SafeDim}"/>
+                                                <Setter Property="Stroke" Value="{StaticResource Safe}"/>
+                                                <Setter Property="StrokeThickness" Value="2"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                        <Setter Property="Fill" Value="{StaticResource DangerDim}"/>
+                                                        <Setter Property="Stroke" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="34"
+                                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="&#xEA18;"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+
+                                <!-- Texto de status -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock FontSize="20" FontWeight="Bold" Margin="0,0,0,4">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Você está protegido"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                        <Setter Property="Text" Value="Proteção desativada"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock FontSize="12" Foreground="{StaticResource FgMuted}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="Monitoramento em tempo real ativo"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                        <Setter Property="Text" Value="Ative o monitoramento para proteção contínua"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock FontSize="11" Foreground="{StaticResource FgDim}" Margin="0,6,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value=""/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding LastScanTime}" Value="{x:Null}">
+                                                        <Setter Property="Text" Value="Nenhum scan realizado ainda"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock FontSize="11" Foreground="{StaticResource FgDim}"
+                                               Text="{Binding LastScanTime, StringFormat='Último scan: {0:dd/MM/yyyy HH:mm}', TargetNullValue=''}"/>
+                                </StackPanel>
+
+                                <!-- Botões de ação -->
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                            MinWidth="150">
+                                    <Button Content="Scan Rápido"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding QuickScanCommand}"
+                                            IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"
+                                            Padding="18,10" FontSize="13"/>
+                                    <Button Content="{Binding IsMonitoring, Converter={StaticResource MonitorButtonConverter}}"
+                                            Margin="0,8,0,0" Padding="18,8" FontSize="12"
+                                            Command="{Binding ToggleMonitorCommand}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                                        <Setter Property="Background" Value="{StaticResource DangerDim}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Danger}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </StackPanel>
                             </Grid>
-
-                            <!-- Status text -->
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock FontSize="22" FontWeight="Bold">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="Você está protegido"/>
-                                            <Setter Property="Foreground" Value="#00C853"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
-                                                    <Setter Property="Text" Value="Proteção inativa"/>
-                                                    <Setter Property="Foreground" Value="#EF4444"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Foreground="#64748B" FontSize="12" Margin="0,6,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value="Monitoramento em tempo real ativo"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
-                                                    <Setter Property="Text" Value="Ative o monitoramento para proteção contínua"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Foreground="#64748B" FontSize="11" Margin="0,4,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Text" Value=""/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding LastScanTime}" Value="{x:Null}">
-                                                    <Setter Property="Text" Value="Nenhum scan realizado ainda"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Foreground="#64748B" FontSize="11" Margin="0,4,0,0"
-                                           Text="{Binding LastScanTime, StringFormat='Último scan: {0:dd/MM/yyyy HH:mm}', TargetNullValue=''}"/>
-                            </StackPanel>
-
-                            <!-- Quick action -->
-                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                                <Button Content="Scan Rápido" Style="{StaticResource PrimaryButton}"
-                                        Command="{Binding QuickScanCommand}"
-                                        IsEnabled="{Binding IsScanning, Converter={StaticResource InverseBoolConverter}}"
-                                        Padding="20,10" FontSize="13"/>
-                                <Button Content="{Binding IsMonitoring, Converter={StaticResource MonitorButtonConverter}}"
-                                        Margin="0,8,0,0" Padding="20,8" FontSize="12"
-                                        Command="{Binding ToggleMonitorCommand}">
-                                    <Button.Style>
-                                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                            <Setter Property="Background" Value="#1E293B"/>
-                                            <Setter Property="Foreground" Value="#94A3B8"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
-                                                    <Setter Property="Background" Value="#26EF4444"/>
-                                                    <Setter Property="Foreground" Value="#EF4444"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Button.Style>
-                                </Button>
-                            </StackPanel>
                         </Grid>
                     </Border>
 
@@ -320,58 +341,88 @@
                     <UniformGrid Grid.Row="2" Rows="1" Columns="4">
                         <Border Style="{StaticResource StatCard}" Margin="0,0,8,0">
                             <StackPanel>
-                                <TextBlock Text="AMEAÇAS BLOQUEADAS" Style="{StaticResource FieldLabel}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Width="28" Height="28" CornerRadius="6"
+                                            Background="{StaticResource DangerDim}" Margin="0,0,8,0">
+                                        <TextBlock Text="&#xEA18;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{StaticResource Danger}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="AMEAÇAS BLOQUEADAS" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
                                 <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
-                                           FontSize="32" FontWeight="Bold"
+                                           FontSize="30" FontWeight="Bold"
                                            Foreground="{StaticResource Danger}"
                                            Text="{Binding TotalThreatsBlocked}"/>
-                                <TextBlock Text="Desde o início" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                                <TextBlock Text="Desde o início" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatCard}" Margin="4,0,4,0">
                             <StackPanel>
-                                <TextBlock Text="ASSINATURAS" Style="{StaticResource FieldLabel}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Width="28" Height="28" CornerRadius="6"
+                                            Background="{StaticResource AccentDim}" Margin="0,0,8,0">
+                                        <TextBlock Text="&#xEBE8;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{StaticResource Accent}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="ASSINATURAS" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
                                 <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
-                                           FontSize="32" FontWeight="Bold"
+                                           FontSize="30" FontWeight="Bold"
                                            Foreground="{StaticResource Accent}"
                                            Text="{Binding SignatureCount, StringFormat=\{0:N0\}}"/>
-                                <TextBlock Text="Base MalwareBazaar" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                                <TextBlock Text="Base MalwareBazaar" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatCard}" Margin="4,0,4,0">
                             <StackPanel>
-                                <TextBlock Text="PROTEÇÃO" Style="{StaticResource FieldLabel}"/>
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="22" Margin="0,0,6,0"
-                                               VerticalAlignment="Center">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="&#xE9F5;"/>
-                                                <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Width="28" Height="28" CornerRadius="6" Margin="0,0,8,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource SafeDim}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
-                                                        <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+                                                        <Setter Property="Background" Value="{StaticResource Surface3}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                    <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
-                                               FontSize="28" FontWeight="Bold" VerticalAlignment="Center"
-                                               Text="{Binding MonitoredFolderCount}">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource Safe}"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
-                                                        <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                        </Border.Style>
+                                        <TextBlock Text="&#xE9F5;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                            <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    <TextBlock Text="PROTEÇÃO" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock Margin="0,3,0,0">
+                                <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
+                                           FontSize="30" FontWeight="Bold"
+                                           Text="{Binding MonitoredFolderCount}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsMonitoring}" Value="False">
+                                                    <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Margin="0,4,0,0">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource MutedText}">
                                             <Setter Property="Text" Value="Pastas monitoradas"/>
@@ -387,9 +438,38 @@
                         </Border>
                         <Border Style="{StaticResource StatCard}" Margin="8,0,0,0">
                             <StackPanel>
-                                <TextBlock Text="CLAUDE AI" Style="{StaticResource FieldLabel}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Width="28" Height="28" CornerRadius="6"
+                                            Background="{StaticResource SafeDim}" Margin="0,0,8,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource SafeDim}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsApiKeySet}" Value="False">
+                                                        <Setter Property="Background" Value="{StaticResource Surface3}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="&#xE9CE;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="{StaticResource Safe}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsApiKeySet}" Value="False">
+                                                            <Setter Property="Foreground" Value="{StaticResource FgDim}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                    <TextBlock Text="CLAUDE AI" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
                                 <TextBlock FontFamily="Segoe UI Variable Display, Segoe UI"
-                                           FontSize="18" FontWeight="Bold" Margin="0,6,0,0">
+                                           FontSize="18" FontWeight="Bold">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Text" Value="Configurada"/>
@@ -403,7 +483,7 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-                                <TextBlock Text="Análise por IA" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                                <TextBlock Text="Análise por IA" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
                     </UniformGrid>
@@ -412,29 +492,56 @@
                     <UniformGrid Grid.Row="3" Rows="1" Columns="3" Margin="0,0,0,0">
                         <Border Style="{StaticResource StatCard}" Margin="0,0,8,0">
                             <StackPanel>
-                                <TextBlock Text="UPTIME" Style="{StaticResource FieldLabel}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Width="28" Height="28" CornerRadius="6"
+                                            Background="{StaticResource AccentDim}" Margin="0,0,8,0">
+                                        <TextBlock Text="&#xE916;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{StaticResource Accent}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="UPTIME" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
                                 <TextBlock FontSize="22" FontWeight="Bold"
                                            Foreground="{StaticResource Accent}"
                                            Text="{Binding UptimeDisplay}"/>
-                                <TextBlock Text="Tempo de execução" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                                <TextBlock Text="Tempo de execução" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatCard}" Margin="4,0,4,0">
                             <StackPanel>
-                                <TextBlock Text="AMEAÇAS HOJE" Style="{StaticResource FieldLabel}"/>
-                                <TextBlock FontSize="32" FontWeight="Bold"
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Width="28" Height="28" CornerRadius="6"
+                                            Background="{StaticResource DangerDim}" Margin="0,0,8,0">
+                                        <TextBlock Text="&#xEBE8;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{StaticResource Danger}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="AMEAÇAS HOJE" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock FontSize="30" FontWeight="Bold"
                                            Foreground="{StaticResource Danger}"
                                            Text="{Binding ThreatsTodayCount}"/>
-                                <TextBlock Text="Detectadas em tempo real" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                                <TextBlock Text="Detectadas em tempo real" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource StatCard}" Margin="8,0,0,0">
                             <StackPanel>
-                                <TextBlock Text="EM QUARENTENA" Style="{StaticResource FieldLabel}"/>
-                                <TextBlock FontSize="32" FontWeight="Bold"
-                                           Foreground="#F59E0B"
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <Border Width="28" Height="28" CornerRadius="6"
+                                            Background="{StaticResource WarnDim}" Margin="0,0,8,0">
+                                        <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                                   Foreground="{StaticResource Warn}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="EM QUARENTENA" Style="{StaticResource FieldLabel}"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock FontSize="30" FontWeight="Bold"
+                                           Foreground="{StaticResource Warn}"
                                            Text="{Binding QuarantineCountDisplay}"/>
-                                <TextBlock Text="Arquivos isolados" Style="{StaticResource MutedText}" Margin="0,3,0,0"/>
+                                <TextBlock Text="Arquivos isolados" Style="{StaticResource MutedText}" Margin="0,4,0,0"/>
                             </StackPanel>
                         </Border>
                     </UniformGrid>

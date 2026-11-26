@@ -11,8 +11,11 @@
     <SolidColorBrush x:Key="Accent"    Color="#FF00C8FF"/>
     <SolidColorBrush x:Key="AccentDim" Color="#1A00C8FF"/>
     <SolidColorBrush x:Key="Safe"      Color="#FF22C55E"/>
+    <SolidColorBrush x:Key="SafeDim"   Color="#2022C55E"/>
     <SolidColorBrush x:Key="Warn"      Color="#FFF59E0B"/>
+    <SolidColorBrush x:Key="WarnDim"   Color="#20F59E0B"/>
     <SolidColorBrush x:Key="Danger"    Color="#FFEF4444"/>
+    <SolidColorBrush x:Key="DangerDim" Color="#20EF4444"/>
     <SolidColorBrush x:Key="Fg"        Color="#FFE6EDF3"/>
     <SolidColorBrush x:Key="FgMuted"   Color="#FF8B949E"/>
     <SolidColorBrush x:Key="FgDim"     Color="#FF484F58"/>
