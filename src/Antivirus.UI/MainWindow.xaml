@@ -1066,13 +1066,20 @@
                         <TextBlock Grid.Column="0" Style="{StaticResource SectionHeader}"
                                    Margin="0" Text="Histórico de Scans"/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="Atualizar"
-                                    Command="{Binding LoadHistoryCommand}"
+                            <Button Command="{Binding LoadHistoryCommand}"
+                                    Style="{StaticResource SecondaryButton}"
+                                    Content="Atualizar"
                                     Margin="0,0,8,0"/>
-                            <Button Content="&#xE74E; Exportar CSV"
-                                    Command="{Binding ExportHistoryCsvCommand}"
-                                    Style="{StaticResource PrimaryButton}"
-                                    FontFamily="Segoe MDL2 Assets, Segoe UI"/>
+                            <Button Command="{Binding ExportHistoryCsvCommand}"
+                                    Style="{StaticResource PrimaryButton}">
+                                <Button.Content>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="&#xE74E;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Exportar CSV" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button.Content>
+                            </Button>
                         </StackPanel>
                     </Grid>
 
